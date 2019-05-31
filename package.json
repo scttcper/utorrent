@@ -1,0 +1,52 @@
+{
+  "name": "@ctrl/utorrent",
+  "version": "0.0.0-placeholder",
+  "description": "",
+  "author": "Scott Cooper <scttcper@gmail.com>",
+  "license": "MIT",
+  "repository": "",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "module": "./dist/module/index.js",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "typescript"
+  ],
+  "scripts": {
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "lint:fix": "eslint --fix src/**/*.ts test/**/*.ts",
+    "prepare": "npm run build",
+    "build": "del dist && tsc && tsc -p tsconfig.module.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --runInBand --reporters=default --reporters=jest-junit --coverage",
+    "semantic-release": "semantic-release"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "24.0.13",
+    "@types/node": "12.0.4",
+    "@typescript-eslint/eslint-plugin": "1.9.0",
+    "@typescript-eslint/parser": "1.9.0",
+    "del-cli": "2.0.0",
+    "eslint": "5.16.0",
+    "eslint-config-prettier": "4.3.0",
+    "eslint-config-xo-space": "0.21.0",
+    "eslint-config-xo-typescript": "0.12.0",
+    "eslint-plugin-import": "2.17.3",
+    "jest": "24.8.0",
+    "jest-junit": "6.4.0",
+    "semantic-release": "15.13.12",
+    "ts-jest": "24.0.2",
+    "typescript": "3.5.1"
+  },
+  "release": {
+    "branch": "master"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
