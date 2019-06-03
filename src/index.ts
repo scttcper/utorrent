@@ -1,10 +1,9 @@
 /* eslint-disable max-params */
 import urljoin from 'url-join';
-import got, { Response, GotJSONOptions, GotBodyOptions } from 'got';
+import got, { Response, GotJSONOptions, GotBodyOptions, GotOptions, GotFormOptions } from 'got';
 import { Cookie } from 'tough-cookie';
 import urlJoin from 'url-join';
 import fs from 'fs';
-import urlJoin from 'url-join';
 import { TorrentSettings, TorrentClient } from '@ctrl/shared-torrent';
 import { request } from 'http';
 import FormData from 'form-data';
@@ -77,9 +76,10 @@ export class Utorrent {
     const params = new URLSearchParams();
     params.set('hash', hash);
 
+    // decide action from remove torrent data
     let action = 'removetorrent';
     if (removeData) {
-      action = 'removedatatorrent'
+      action = 'removedatatorrent';
     }
 
     const res = await this.request<BaseResponse>(action, params);
@@ -87,22 +87,48 @@ export class Utorrent {
   }
 
   async addTorrent(torrent: string | Buffer): Promise<BaseResponse> {
+    if (this._cookie) {
+      // eslint-disable-next-line new-cap
+      if (this._cookie.TTL() < 5000) {
+        this.resetSession();
+      }
+    }
+
+    if (!this._token) {
+      await this.connect();
+    }
+
     const form = new FormData();
     if (typeof torrent === 'string') {
       if (fs.existsSync(torrent)) {
-        form.append('file', Buffer.from(fs.readFileSync(torrent)));
+        form.append('torrent_file', Buffer.from(fs.readFileSync(torrent)), {
+          contentType: 'application/x-bittorrent',
+        });
       } else {
-        form.append('file', Buffer.from(torrent, 'base64'));
+        form.append('torrent_file', Buffer.from(torrent, 'base64'), {
+          contentType: 'application/x-bittorrent',
+        });
       }
     } else {
-      form.append('file', torrent);
+      form.append('torrent_file', torrent, { contentType: 'application/x-bittorrent' });
     }
 
+    const params = new URLSearchParams();
+    params.set('download_dir', '0');
+    params.set('path', '');
+    params.set('action', 'add-file');
+    params.set('token', this._token as string);
+
     const url = urlJoin(this.config.baseUrl, this.config.path);
-    const options: GotJSONOptions = {
-      headers: form.getHeaders(),
+    const options: GotBodyOptions<any> = {
+      headers: {
+        'Content-Type': undefined,
+        Authorization: this._authorization(),
+        Cookie: this._cookie && this._cookie.cookieString(),
+      },
+      query: params,
       body: form,
-      json: true,
+      retry: 0,
     };
     if (this.config.timeout) {
       options.timeout = this.config.timeout;
@@ -113,7 +139,7 @@ export class Utorrent {
     }
 
     const res = await got.post(url, options);
-    return res.body;
+    return JSON.parse(res.body);
   }
 
   /**
@@ -220,9 +246,9 @@ export class Utorrent {
       await this.connect();
     }
 
-    params.append('token', this._token as string);
-    params.append('action', action);
-    params.append('t', Date.now().toString());
+    params.set('token', this._token as string);
+    params.set('t', Date.now().toString());
+    params.set('action', action);
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
     const options: GotJSONOptions = {
