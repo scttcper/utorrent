@@ -4,9 +4,10 @@ jobs:
     docker:
       - image: circleci/node:10
       - image: ekho/utorrent
-        ports:
-          - 8080:44822
-          - 6881:6881
+        command: docker run                                             \
+                      --name utorrent                                   \
+                      -p 8080:44822                                     \
+                      ekho/utorren
     steps:
       - checkout
       - restore_cache:
