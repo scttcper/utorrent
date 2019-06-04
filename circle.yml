@@ -3,6 +3,10 @@ jobs:
   test:
     docker:
       - image: circleci/node:10
+      - image: ekho/utorrent
+        ports:
+          - 8080:44822
+          - 6881:6881
     steps:
       - checkout
       - restore_cache:
