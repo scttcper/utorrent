@@ -1,28 +1,27 @@
-/* eslint-disable max-params */
-import urljoin from 'url-join';
-import got, { Response, GotJSONOptions, GotBodyOptions, GotOptions, GotFormOptions } from 'got';
-import { Cookie } from 'tough-cookie';
-import urlJoin from 'url-join';
-import fs from 'fs';
 import {
-  TorrentSettings,
-  TorrentClient,
-  AddTorrentOptions,
+  AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
   NormalizedTorrent,
+  TorrentClient,
+  TorrentSettings,
   TorrentState,
 } from '@ctrl/shared-torrent';
-import { request } from 'http';
+import { hash } from '@ctrl/torrent-file';
 import FormData from 'form-data';
+import fs from 'fs';
+import got, { GotBodyOptions, GotJSONOptions, Response } from 'got';
+import { Cookie } from 'tough-cookie';
+import { URLSearchParams } from 'url';
+import urlJoin from 'url-join';
+
 import {
-  VersionResponse,
-  SettingsResponse,
   BaseResponse,
   RssUpdateResponse,
-  TorrentListResponse,
+  SettingsResponse,
   TorrentData,
+  TorrentListResponse,
+  VersionResponse,
 } from './types';
-import { URLSearchParams } from 'url';
 
 const defaults: TorrentSettings = {
   baseUrl: 'http://localhost:44822/',
@@ -32,7 +31,7 @@ const defaults: TorrentSettings = {
   timeout: 5000,
 };
 
-export class Utorrent {
+export class Utorrent implements TorrentClient {
   config: TorrentSettings;
 
   private _token?: string;
@@ -82,7 +81,7 @@ export class Utorrent {
   async pauseTorrent(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
-    const res = await this.request<BaseResponse>('start', params);
+    const res = await this.request<BaseResponse>('pause', params);
     return res.body;
   }
 
@@ -135,6 +134,54 @@ export class Utorrent {
     return res.body;
   }
 
+  async setProps(hash: string, props: { [key: string]: string | number }): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    for (const prop of Object.entries(props)) {
+      params.set(prop[0], prop[1].toString());
+    }
+
+    params.set('hash', hash);
+
+    const res = await this.request<BaseResponse>('setprops', params);
+    return res.body;
+  }
+
+  async normalizedAddTorrent(
+    torrent: string | Buffer,
+    options: Partial<NormalizedAddTorrentOptions> = {},
+  ): Promise<NormalizedTorrent> {
+    if (!Buffer.isBuffer(torrent)) {
+      torrent = Buffer.from(torrent);
+    }
+
+    const torrentHash = await hash(torrent);
+
+    await this.addTorrent(torrent);
+
+    if (options.startPaused) {
+      await this.pauseTorrent(torrentHash);
+    }
+
+    if (options.label) {
+      await this.setProps(torrentHash, {
+        s: 'label',
+        v: options.label,
+      });
+    }
+
+    return this.getTorrent(torrentHash);
+  }
+
+  async getTorrent(id: string) {
+    const listResponse = await this.listTorrents();
+    const torrentData = listResponse.torrents.find(n => n[0].toLowerCase() === id.toLowerCase());
+    if (!torrentData) {
+      throw new Error('Torrent not found');
+    }
+
+    return this._normalizeTorrentData(torrentData);
+  }
+
   async getAllData(): Promise<AllClientData> {
     const listTorrents = await this.listTorrents();
     const results: AllClientData = {
@@ -152,7 +199,7 @@ export class Utorrent {
         id: label[0],
         name: label[0],
         count: label[1],
-      })
+      });
     }
 
     return results;
@@ -397,7 +444,7 @@ export class Utorrent {
     }
 
     const result: NormalizedTorrent = {
-      id: torrent[0],
+      id: torrent[0].toLowerCase(),
       name: torrent[2],
       state,
       isCompleted,
@@ -425,8 +472,8 @@ export class Utorrent {
   }
 }
 
-const STATE_STARTED = 1
-const STATE_CHECKING = 2
-const STATE_ERROR = 16
-const STATE_PAUSED = 32
-const STATE_QUEUED = 64
+const STATE_STARTED = 1;
+const STATE_CHECKING = 2;
+const STATE_ERROR = 16;
+const STATE_PAUSED = 32;
+const STATE_QUEUED = 64;

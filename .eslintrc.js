@@ -13,5 +13,6 @@ module.exports = {
     'comma-dangle': ['error', 'always-multiline'],
     '@typescript-eslint/camelcase': 0,
     'no-await-in-loop': 0,
+    'max-params': 0,
   },
 };

@@ -91,4 +91,31 @@ describe('Ubuntu', () => {
     expect(torrent.totalUploaded).toBe(0);
     expect(torrent.uploadSpeed).toBe(0);
   });
+  it('should add torrent with normalized response', async () => {
+    const client = new Utorrent({ baseUrl });
+
+    const torrent = await client.normalizedAddTorrent(fs.readFileSync(torrentFile), {
+      label: 'test',
+    });
+    expect(torrent.connectedPeers).toBe(0);
+    expect(torrent.connectedSeeds).toBe(0);
+    expect(torrent.downloadSpeed).toBe(0);
+    expect(torrent.eta).toBe(0);
+    expect(torrent.isCompleted).toBe(false);
+    expect(torrent.label).toBe('test');
+    expect(torrent.name).toBe(torrentName);
+    expect(torrent.progress).toBeGreaterThanOrEqual(0);
+    expect(torrent.queuePosition).toBe(1);
+    expect(torrent.ratio).toBe(0);
+    expect(torrent.savePath).toBe('/utorrent/data/incomplete');
+    expect(torrent.state).toBe(TorrentState.queued);
+    expect(torrent.stateMessage).toBe('');
+    expect(torrent.totalDownloaded).toBe(0);
+    expect(torrent.totalPeers).toBe(0);
+    expect(torrent.totalSeeds).toBe(0);
+    expect(torrent.totalSelected).toBe(1953349632);
+    expect(torrent.totalSize).toBe(1953349632);
+    expect(torrent.totalUploaded).toBe(0);
+    expect(torrent.uploadSpeed).toBe(0);
+  });
 });
