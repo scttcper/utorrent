@@ -56,62 +56,7 @@ export enum Access {
 }
 
 export interface TorrentListResponse extends BaseResponse {
-  /**
-   * torrent list, its a huge tuple
-   * HASH (string)
-   * STATUS* (integer)
-   * NAME (string)
-   * SIZE (integer in bytes)
-   * PERCENT PROGRESS (integer in per mils)
-   * DOWNLOADED (integer in bytes)
-   * UPLOADED (integer in bytes)
-   * RATIO (integer in per mils)
-   * UPLOAD SPEED (integer in bytes per second)
-   * DOWNLOAD SPEED (integer in bytes per second)
-   * ETA (integer in seconds)
-   * LABEL (string)
-   * PEERS CONNECTED (integer)
-   * PEERS IN SWARM (integer)
-   * SEEDS CONNECTED (integer)
-   * SEEDS IN SWARM (integer)
-   * AVAILABILITY (integer in 1/65536ths)
-   * TORRENT QUEUE ORDER (integer)
-   * REMAINING (integer in bytes)
-   */
-  torrents: Array<
-  [
-    string,
-    number,
-    string,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    string,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    string,
-    string,
-    string,
-    string,
-    number,
-    number,
-    string,
-    string,
-    number,
-    string,
-    boolean
-  ]
-  >;
+  torrents: TorrentData[];
   /**
    * array of types containing label name and count
    */
@@ -123,6 +68,61 @@ export interface TorrentListResponse extends BaseResponse {
   rssfeeds: any[];
   rssfilters: any[];
 }
+
+/**
+ * torrent list, its a huge tuple
+ * HASH (string)
+ * STATUS* (integer)
+ * NAME (string)
+ * SIZE (integer in bytes)
+ * PERCENT PROGRESS (integer in per mils)
+ * DOWNLOADED (integer in bytes)
+ * UPLOADED (integer in bytes)
+ * RATIO (integer in per mils)
+ * UPLOAD SPEED (integer in bytes per second)
+ * DOWNLOAD SPEED (integer in bytes per second)
+ * ETA (integer in seconds)
+ * LABEL (string)
+ * PEERS CONNECTED (integer)
+ * PEERS IN SWARM (integer)
+ * SEEDS CONNECTED (integer)
+ * SEEDS IN SWARM (integer)
+ * AVAILABILITY (integer in 1/65536ths)
+ * TORRENT QUEUE ORDER (integer)
+ * REMAINING (integer in bytes)
+ */
+export type TorrentData = [
+  string,
+  number,
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  string,
+  string,
+  string,
+  string,
+  number,
+  number,
+  string,
+  string,
+  number,
+  string,
+  boolean
+];
 
 export interface RssUpdateResponse extends BaseResponse {
   rss_ident: number;

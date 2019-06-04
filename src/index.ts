@@ -4,14 +4,28 @@ import got, { Response, GotJSONOptions, GotBodyOptions, GotOptions, GotFormOptio
 import { Cookie } from 'tough-cookie';
 import urlJoin from 'url-join';
 import fs from 'fs';
-import { TorrentSettings, TorrentClient } from '@ctrl/shared-torrent';
+import {
+  TorrentSettings,
+  TorrentClient,
+  AddTorrentOptions,
+  AllClientData,
+  NormalizedTorrent,
+  TorrentState,
+} from '@ctrl/shared-torrent';
 import { request } from 'http';
 import FormData from 'form-data';
-import { VersionResponse, SettingsResponse, BaseResponse, RssUpdateResponse } from './types';
+import {
+  VersionResponse,
+  SettingsResponse,
+  BaseResponse,
+  RssUpdateResponse,
+  TorrentListResponse,
+  TorrentData,
+} from './types';
 import { URLSearchParams } from 'url';
 
 const defaults: TorrentSettings = {
-  baseUrl: 'http://localhost:8080/',
+  baseUrl: 'http://localhost:44822/',
   path: '/gui/',
   username: 'admin',
   password: '',
@@ -44,10 +58,17 @@ export class Utorrent {
     return res.body;
   }
 
-  async startTorrent(hash: string): Promise<BaseResponse> {
+  /**
+   * alias of unpause, resumes a torrent
+   */
+  resumeTorrent(hash: string): Promise<BaseResponse> {
+    return this.unpause(hash);
+  }
+
+  async unpause(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
-    const res = await this.request<BaseResponse>('pause', params);
+    const res = await this.request<BaseResponse>('unpause', params);
     return res.body;
   }
 
@@ -72,6 +93,34 @@ export class Utorrent {
     return res.body;
   }
 
+  async queueUp(hash: string): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    params.set('hash', hash);
+    const res = await this.request<BaseResponse>('queueup', params);
+    return res.body;
+  }
+
+  async queueDown(hash: string): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    params.set('hash', hash);
+    const res = await this.request<BaseResponse>('queuedown', params);
+    return res.body;
+  }
+
+  async queueTop(hash: string): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    params.set('hash', hash);
+    const res = await this.request<BaseResponse>('queuetop', params);
+    return res.body;
+  }
+
+  async queueBottom(hash: string): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    params.set('hash', hash);
+    const res = await this.request<BaseResponse>('queuebottom', params);
+    return res.body;
+  }
+
   async removeTorrent(hash: string, removeData = true): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
@@ -84,6 +133,29 @@ export class Utorrent {
 
     const res = await this.request<BaseResponse>(action, params);
     return res.body;
+  }
+
+  async getAllData(): Promise<AllClientData> {
+    const listTorrents = await this.listTorrents();
+    const results: AllClientData = {
+      torrents: [],
+      labels: [],
+    };
+
+    for (const torrent of listTorrents.torrents) {
+      const torrentData: NormalizedTorrent = this._normalizeTorrentData(torrent);
+      results.torrents.push(torrentData);
+    }
+
+    for (const label of listTorrents.label) {
+      results.labels.push({
+        id: label[0],
+        name: label[0],
+        count: label[1],
+      })
+    }
+
+    return results;
   }
 
   async addTorrent(torrent: string | Buffer): Promise<BaseResponse> {
@@ -192,7 +264,12 @@ export class Utorrent {
     return res.body;
   }
 
-  async listTorrents() {}
+  async listTorrents(): Promise<TorrentListResponse> {
+    const params = new URLSearchParams();
+    params.set('list', '1');
+    const res = await this.request<TorrentListResponse>('', params);
+    return res.body;
+  }
 
   async connect(): Promise<void> {
     const url = urlJoin(this.config.baseUrl, this.config.path, '/token.html');
@@ -248,7 +325,10 @@ export class Utorrent {
 
     params.set('token', this._token as string);
     params.set('t', Date.now().toString());
-    params.set('action', action);
+    // allows action to be an empty string
+    if (action) {
+      params.set('action', action);
+    }
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
     const options: GotJSONOptions = {
@@ -277,4 +357,76 @@ export class Utorrent {
     const encoded = Buffer.from(str).toString('base64');
     return 'Basic ' + encoded;
   }
+
+  private _normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
+    const torrentState: number = torrent[1];
+    const progress: number = torrent[4] / 100;
+    const done = progress >= 100;
+    const isCompleted = progress >= 100;
+
+    let state = TorrentState.unknown;
+    if (torrentState & STATE_PAUSED) {
+      // paused
+      state = TorrentState.paused;
+    } else if (torrentState & STATE_STARTED) {
+      // started, seeding or leeching
+      if (done) {
+        state = TorrentState.seeding;
+      } else {
+        state = TorrentState.downloading;
+      }
+      // if (!(torrentState & STATE_QUEUED)) {
+      //   // forced start
+      //   res[1] = '[F] ' + res[1];
+      // }
+    } else if (torrentState & STATE_CHECKING) {
+      // checking
+      state = TorrentState.checking;
+    } else if (torrentState & STATE_ERROR) {
+      // error
+      state = TorrentState.error;
+    } else if (torrentState & STATE_QUEUED) {
+      // queued
+      state = TorrentState.queued;
+    } else if (done) {
+      // finished
+      state = TorrentState.paused;
+    } else {
+      // stopped
+      state = TorrentState.paused;
+    }
+
+    const result: NormalizedTorrent = {
+      id: torrent[0],
+      name: torrent[2],
+      state,
+      isCompleted,
+      stateMessage: '',
+      progress,
+      ratio: torrent[7] / 1000,
+      dateAdded: new Date(torrent[23]).toISOString(),
+      dateCompleted: new Date(torrent[24]).toISOString(),
+      label: torrent[11],
+      savePath: torrent[26],
+      uploadSpeed: torrent[8],
+      downloadSpeed: torrent[9],
+      eta: torrent[10],
+      queuePosition: torrent[17],
+      connectedPeers: torrent[12],
+      connectedSeeds: torrent[14],
+      totalPeers: torrent[13],
+      totalSeeds: torrent[15],
+      totalSelected: torrent[18],
+      totalSize: torrent[3],
+      totalUploaded: torrent[6],
+      totalDownloaded: torrent[5],
+    };
+    return result;
+  }
 }
+
+const STATE_STARTED = 1
+const STATE_CHECKING = 2
+const STATE_ERROR = 16
+const STATE_PAUSED = 32
+const STATE_QUEUED = 64
