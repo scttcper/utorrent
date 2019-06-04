@@ -4,7 +4,7 @@ import fs from 'fs';
 import { Utorrent } from '../src/index';
 import { TorrentState } from '@ctrl/shared-torrent';
 
-const baseUrl = 'http://localhost:44822/';
+const baseUrl = process.env.BASE_URL || 'http://localhost:44822/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
 const torrentFile = path.join(__dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
 
