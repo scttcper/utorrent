@@ -11,11 +11,12 @@ npm install @ctrl/utorrent
 ### Use
 
 ```ts
-import { Deluge } from '@ctrl/deluge';
+import { Utorrent } from '@ctrl/utorrent';
 
-const client = new Deluge({
-  baseUrl: 'http://localhost:8112/',
-  password: 'deluge',
+const client = new Utorrent({
+  baseUrl: 'http://localhost:44822/',
+  path: '/gui/',
+  password: 'admin',
 });
 
 async function main() {
@@ -41,10 +42,10 @@ console.log(data.torrents);
 ```
 
 ##### getTorrent
-Returns one torrent data
+Returns one torrent data from hash id
 
 ```ts
-const data = await client.getTorrent();
+const data = await client.getTorrent('torrent-hash');
 console.log(data);
 ```
 
@@ -52,9 +53,9 @@ console.log(data);
 Pause or resume a torrent
 
 ```ts
-const paused = await client.pauseTorrent();
+const paused = await client.pauseTorrent('torrent-hash');
 console.log(paused);
-const resumed = await client.resumeTorrent();
+const resumed = await client.resumeTorrent('torrent-hash');
 console.log(resumed);
 ```
 
@@ -72,5 +73,6 @@ console.log(res);
 ```
 
 ### See Also
+deluge - https://github.com/TypeCtrl/deluge  
 transmission - https://github.com/TypeCtrl/transmission  
 qbittorrent - https://github.com/TypeCtrl/qbittorrent  
