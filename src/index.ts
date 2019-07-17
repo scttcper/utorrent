@@ -60,7 +60,7 @@ export class Utorrent implements TorrentClient {
   /**
    * alias of unpause, resumes a torrent
    */
-  resumeTorrent(hash: string): Promise<BaseResponse> {
+  async resumeTorrent(hash: string): Promise<BaseResponse> {
     return this.unpause(hash);
   }
 
