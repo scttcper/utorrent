@@ -23,7 +23,7 @@ describe('Ubuntu', () => {
       await client.removeTorrent(torrent[0]);
     }
   });
-  it('should be instantiable', async () => {
+  it('should be instantiable', () => {
     const client = new Utorrent({ baseUrl });
     expect(client).toBeTruthy();
   });
