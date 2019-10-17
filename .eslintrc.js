@@ -14,5 +14,7 @@ module.exports = {
     '@typescript-eslint/camelcase': 0,
     'no-await-in-loop': 0,
     'max-params': 0,
+    '@typescript-eslint/strict-boolean-expressions': 0,
+    '@typescript-eslint/no-unnecessary-condition': 0,
   },
 };
