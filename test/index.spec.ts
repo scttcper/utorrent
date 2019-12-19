@@ -3,7 +3,7 @@ import fs from 'fs';
 
 import { Utorrent } from '../src/index';
 
-const baseUrl = process.env.BASE_URL || 'http://localhost:44822/';
+const baseUrl = process.env.BASE_URL ?? 'http://localhost:44822/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
 const torrentFile = path.join(__dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
 
@@ -20,6 +20,7 @@ describe('Ubuntu', () => {
     const res = await client.listTorrents();
     for (const torrent of res.torrents) {
       // clean up all torrents
+      // eslint-disable-next-line no-await-in-loop
       await client.removeTorrent(torrent[0]);
     }
   });

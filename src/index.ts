@@ -42,7 +42,7 @@ export class Utorrent implements TorrentClient {
     this.config = { ...defaults, ...options };
   }
 
-  resetSession() {
+  resetSession(): void {
     this._token = undefined;
     this._cookie = undefined;
   }
@@ -172,7 +172,7 @@ export class Utorrent implements TorrentClient {
     return this.getTorrent(torrentHash);
   }
 
-  async getTorrent(id: string) {
+  async getTorrent(id: string): Promise<NormalizedTorrent> {
     const listResponse = await this.listTorrents();
     const torrentData = listResponse.torrents.find(n => n[0].toLowerCase() === id.toLowerCase());
     if (!torrentData) {
@@ -304,7 +304,7 @@ export class Utorrent implements TorrentClient {
     return res.body;
   }
 
-  async rssRemove(id: number) {
+  async rssRemove(id: number): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('feedid', id.toString());
     const res = await this.request<BaseResponse>('rss-remove', params);
@@ -399,8 +399,8 @@ export class Utorrent implements TorrentClient {
     return got.get(url, options);
   }
 
-  private _authorization() {
-    const str = `${this.config.username || ''}:${this.config.password || ''}`;
+  private _authorization(): string {
+    const str = `${this.config.username ?? ''}:${this.config.password ?? ''}`;
     const encoded = Buffer.from(str).toString('base64');
     return 'Basic ' + encoded;
   }
