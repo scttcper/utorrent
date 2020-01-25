@@ -1,3 +1,10 @@
+import FormData from 'form-data';
+import fs from 'fs';
+import got, { Response } from 'got';
+import { Cookie } from 'tough-cookie';
+import { URLSearchParams } from 'url';
+import urlJoin from 'url-join';
+
 import {
   AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
@@ -7,12 +14,6 @@ import {
   TorrentState,
 } from '@ctrl/shared-torrent';
 import { hash } from '@ctrl/torrent-file';
-import FormData from 'form-data';
-import fs from 'fs';
-import got, { GotBodyOptions, GotJSONOptions, Response } from 'got';
-import { Cookie } from 'tough-cookie';
-import { URLSearchParams } from 'url';
-import urlJoin from 'url-join';
 
 import {
   BaseResponse,
@@ -239,26 +240,21 @@ export class Utorrent implements TorrentClient {
     params.set('token', this._token as string);
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
-    const options: GotBodyOptions<any> = {
+
+    const res = await got.post(url, {
       headers: {
         'Content-Type': undefined,
         Authorization: this._authorization(),
         Cookie: this._cookie && this._cookie.cookieString(),
       },
-      query: params,
+      searchParams: params,
       body: form,
       retry: 0,
-    };
-    if (this.config.timeout) {
-      options.timeout = this.config.timeout;
-    }
+      timeout: this.config.timeout,
+      agent: this.config.agent,
+    }).json<BaseResponse>();
 
-    if (this.config.agent) {
-      options.agent = this.config.agent;
-    }
-
-    const res = await got.post(url, options);
-    return JSON.parse(res.body);
+    return res;
   }
 
   /**
@@ -346,7 +342,7 @@ export class Utorrent implements TorrentClient {
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
-    const match = res.body.match(regex);
+    const match = regex.exec(res.body);
     if (match) {
       this._token = match[match.length - 1];
       return;
@@ -378,25 +374,17 @@ export class Utorrent implements TorrentClient {
     }
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
-    const options: GotJSONOptions = {
+    return got.get<T>(url, {
       headers: {
         Authorization: this._authorization(),
         Cookie: this._cookie && this._cookie.cookieString(),
       },
-      query: params,
+      searchParams: params,
       retry: 0,
-      json: true,
-    };
-
-    if (this.config.timeout) {
-      options.timeout = this.config.timeout;
-    }
-
-    if (this.config.agent) {
-      options.agent = this.config.agent;
-    }
-
-    return got.get(url, options);
+      timeout: this.config.timeout,
+      agent: this.config.agent,
+      responseType: 'json',
+    });
   }
 
   private _authorization(): string {
