@@ -1,6 +1,6 @@
 import FormData from 'form-data';
 import fs from 'fs';
-import got, { Response } from 'got';
+import got, { Response, OptionsOfTextResponseBody } from 'got';
 import { Cookie } from 'tough-cookie';
 import { URLSearchParams } from 'url';
 import urlJoin from 'url-join';
@@ -295,7 +295,7 @@ export class Utorrent implements TorrentClient {
     params.set('feed-id', id.toString());
     params.set('subscribe', Number(subscribe).toString());
     params.set('smart-filter', Number(smartFilter).toString());
-    params.set('enabled', enabled.toString());
+    params.set('enabled', JSON.stringify(enabled));
     const res = await this.request<RssUpdateResponse>('rss-update', params);
     return res.body;
   }
@@ -322,10 +322,11 @@ export class Utorrent implements TorrentClient {
     };
     const params = new URLSearchParams();
     params.set('t', Date.now().toString());
-    const options: any = {
+    const options: OptionsOfTextResponseBody = {
       headers,
-      query: params,
+      searchParams: params,
       retry: 0,
+      responseType: 'text',
     };
     if (this.config.timeout) {
       options.timeout = this.config.timeout;

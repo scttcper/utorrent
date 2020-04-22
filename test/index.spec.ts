@@ -31,12 +31,14 @@ describe('Ubuntu', () => {
   it('should connect', async () => {
     const client = new Utorrent({ baseUrl });
     await client.connect();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect((client as any)._token.length).toBeGreaterThan(0);
   });
   it('should disconnect', async () => {
     const client = new Utorrent({ baseUrl });
     await client.connect();
     client.resetSession();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect((client as any)._token).toBeUndefined();
   });
   it('should add torrent', async () => {
