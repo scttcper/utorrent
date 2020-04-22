@@ -2,6 +2,8 @@
 
 > TypeScript api wrapper for [utorrent](https://www.utorrent.com) using [got](https://github.com/sindresorhus/got)
 
+DOCS: https://ctrl-utorrent.netlify.app/  
+
 ### Install
 
 ```console

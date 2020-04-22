@@ -20,6 +20,7 @@
     "lint:fix": "eslint --fix --ext .js,.ts, .",
     "prepare": "npm run build",
     "build": "tsc -p tsconfig.build.json",
+    "build:docs": "typedoc --out docs --target es6 --theme minimal --mode file src && touch docs/.nojekyll",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --runInBand --reporters=default --coverage",
@@ -47,6 +48,7 @@
     "jest": "25.4.0",
     "semantic-release": "17.0.7",
     "ts-jest": "25.4.0",
+    "typedoc": "0.17.4",
     "typescript": "3.8.3"
   },
   "jest": {
