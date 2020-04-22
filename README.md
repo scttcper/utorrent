@@ -2,8 +2,6 @@
 
 > TypeScript api wrapper for [utorrent](https://www.utorrent.com) using [got](https://github.com/sindresorhus/got)
 
-DOCS: https://ctrl-utorrent.netlify.app/  
-
 ### Install
 
 ```console
@@ -29,8 +27,9 @@ async function main() {
 
 ### API
 
-Docs: https://github.com/bittorrent/webui/wiki/Web-UI-API  
+DOCS: https://ctrl-utorrent.netlify.app  
 utorrent webui: https://github.com/bittorrent/webui/blob/master/webui.js  
+another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API  
 
 ### Normalized API
 These functions have been normalized between torrent clients. Can easily support multiple torrent clients. See below for alternative supported torrent clients
