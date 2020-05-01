@@ -48,7 +48,7 @@
     "jest": "25.5.3",
     "semantic-release": "17.0.7",
     "ts-jest": "25.4.0",
-    "typedoc": "0.17.4",
+    "typedoc": "0.17.6",
     "typescript": "3.8.3"
   },
   "jest": {
