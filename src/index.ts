@@ -245,7 +245,7 @@ export class Utorrent implements TorrentClient {
       headers: {
         'Content-Type': undefined,
         Authorization: this._authorization(),
-        Cookie: this._cookie && this._cookie.cookieString(),
+        Cookie: this._cookie?.cookieString(),
       },
       searchParams: params,
       body: form,
@@ -281,6 +281,7 @@ export class Utorrent implements TorrentClient {
    * @param [smartFilter] Use smart episode filter
    * @param [enabled] disable / enable an rss feed
    */
+  // eslint-disable-next-line max-params
   async rssUpdate(
     url: string,
     id = -1,
@@ -338,7 +339,7 @@ export class Utorrent implements TorrentClient {
 
     const res = await got.get(url, options);
     this._cookie = Cookie.parse(
-      (res.headers && res.headers['set-cookie'] && res.headers['set-cookie'][0]) || '',
+      (res.headers?.['set-cookie']?.[0]) ?? '',
     );
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
@@ -352,6 +353,7 @@ export class Utorrent implements TorrentClient {
     throw new Error('Valid token not found');
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   async request<T extends object>(
     action: string,
     params: URLSearchParams = new URLSearchParams(),
@@ -378,7 +380,7 @@ export class Utorrent implements TorrentClient {
     return got.get<T>(url, {
       headers: {
         Authorization: this._authorization(),
-        Cookie: this._cookie && this._cookie.cookieString(),
+        Cookie: this._cookie?.cookieString(),
       },
       searchParams: params,
       retry: 0,

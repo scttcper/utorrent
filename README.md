@@ -1,4 +1,8 @@
-# utorrent [![npm](https://img.shields.io/npm/v/@ctrl/utorrent.svg?maxAge=3600)](https://www.npmjs.com/package/@ctrl/utorrent) [![CircleCI](https://circleci.com/gh/TypeCtrl/utorrent.svg?style=svg)](https://circleci.com/gh/TypeCtrl/utorrent) [![coverage status](https://codecov.io/gh/typectrl/utorrent/branch/master/graph/badge.svg)](https://codecov.io/gh/typectrl/utorrent)
+# utorrent
+
+[![npm](https://badgen.net/npm/v/@ctrl/utorrent)](https://www.npmjs.com/package/@ctrl/utorrent)
+[![CircleCI](https://badgen.net/circleci/github/scttcper/utorrent)](https://circleci.com/gh/scttcper/utorrent)
+[![coverage](https://badgen.net/codecov/c/github/scttcper/utorrent)](https://codecov.io/gh/scttcper/utorrent)
 
 > TypeScript api wrapper for [utorrent](https://www.utorrent.com) using [got](https://github.com/sindresorhus/got)
 
@@ -27,14 +31,16 @@ async function main() {
 
 ### API
 
-DOCS: https://ctrl-utorrent.netlify.app  
+DOCS: https://utorrent.vercel.app
 utorrent webui: https://github.com/bittorrent/webui/blob/master/webui.js  
-another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API  
+another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
 
 ### Normalized API
+
 These functions have been normalized between torrent clients. Can easily support multiple torrent clients. See below for alternative supported torrent clients
 
 ##### getAllData
+
 Returns all torrent data and an array of label objects. Data has been normalized and does not match the output of native `listTorrents()`.
 
 ```ts
@@ -43,6 +49,7 @@ console.log(data.torrents);
 ```
 
 ##### getTorrent
+
 Returns one torrent data from hash id
 
 ```ts
@@ -51,6 +58,7 @@ console.log(data);
 ```
 
 ##### pauseTorrent and resumeTorrent
+
 Pause or resume a torrent
 
 ```ts
@@ -61,6 +69,7 @@ console.log(resumed);
 ```
 
 ##### removeTorrent
+
 Remove a torrent. Does not remove data on disk by default.
 
 ```ts
@@ -74,6 +83,7 @@ console.log(res);
 ```
 
 ### See Also
-deluge - https://github.com/TypeCtrl/deluge  
-transmission - https://github.com/TypeCtrl/transmission  
-qbittorrent - https://github.com/TypeCtrl/qbittorrent  
+
+deluge - https://github.com/scttcper/deluge  
+transmission - https://github.com/scttcper/transmission  
+qbittorrent - https://github.com/scttcper/qbittorrent  

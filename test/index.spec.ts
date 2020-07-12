@@ -1,7 +1,8 @@
+import { expect, describe, afterEach, it } from '@jest/globals';
 import path from 'path';
 import fs from 'fs';
 
-import { Utorrent } from '../src/index';
+import { Utorrent } from '../src';
 
 const baseUrl = process.env.BASE_URL ?? 'http://localhost:44822/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
@@ -31,14 +32,12 @@ describe('Ubuntu', () => {
   it('should connect', async () => {
     const client = new Utorrent({ baseUrl });
     await client.connect();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect((client as any)._token.length).toBeGreaterThan(0);
   });
   it('should disconnect', async () => {
     const client = new Utorrent({ baseUrl });
     await client.connect();
     client.resetSession();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect((client as any)._token).toBeUndefined();
   });
   it('should add torrent', async () => {
