@@ -1,10 +1,11 @@
+import { existsSync, readFileSync } from 'fs';
+import { URLSearchParams } from 'url';
+
 import FormData from 'form-data';
-import fs from 'fs';
 import got, { Response, OptionsOfTextResponseBody } from 'got';
 import { Cookie } from 'tough-cookie';
-import { URLSearchParams } from 'url';
-import urlJoin from 'url-join';
-
+import { urljoin } from '@ctrl/url-join';
+import { hash } from '@ctrl/torrent-file';
 import {
   AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
@@ -13,7 +14,6 @@ import {
   TorrentSettings,
   TorrentState,
 } from '@ctrl/shared-torrent';
-import { hash } from '@ctrl/torrent-file';
 
 import {
   BaseResponse,
@@ -220,8 +220,8 @@ export class Utorrent implements TorrentClient {
 
     const form = new FormData();
     if (typeof torrent === 'string') {
-      if (fs.existsSync(torrent)) {
-        form.append('torrent_file', Buffer.from(fs.readFileSync(torrent)), {
+      if (existsSync(torrent)) {
+        form.append('torrent_file', Buffer.from(readFileSync(torrent)), {
           contentType: 'application/x-bittorrent',
         });
       } else {
@@ -239,7 +239,7 @@ export class Utorrent implements TorrentClient {
     params.set('action', 'add-file');
     params.set('token', this._token as string);
 
-    const url = urlJoin(this.config.baseUrl, this.config.path);
+    const url = urljoin(this.config.baseUrl, this.config.path);
 
     const res = await got.post(url, {
       headers: {
@@ -316,7 +316,7 @@ export class Utorrent implements TorrentClient {
   }
 
   async connect(): Promise<void> {
-    const url = urlJoin(this.config.baseUrl, this.config.path, '/token.html');
+    const url = urljoin(this.config.baseUrl, this.config.path, '/token.html');
 
     const headers = {
       Authorization: this._authorization(),
@@ -376,7 +376,7 @@ export class Utorrent implements TorrentClient {
       params.set('action', action);
     }
 
-    const url = urlJoin(this.config.baseUrl, this.config.path);
+    const url = urljoin(this.config.baseUrl, this.config.path);
     return got.get<T>(url, {
       headers: {
         Authorization: this._authorization(),
