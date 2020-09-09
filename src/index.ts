@@ -4,7 +4,7 @@ import { URLSearchParams } from 'url';
 import FormData from 'form-data';
 import got, { Response, OptionsOfTextResponseBody } from 'got';
 import { Cookie } from 'tough-cookie';
-import { urljoin } from '@ctrl/url-join';
+import { urlJoin } from '@ctrl/url-join';
 import { hash } from '@ctrl/torrent-file';
 import {
   AddTorrentOptions as NormalizedAddTorrentOptions,
@@ -239,7 +239,7 @@ export class Utorrent implements TorrentClient {
     params.set('action', 'add-file');
     params.set('token', this._token as string);
 
-    const url = urljoin(this.config.baseUrl, this.config.path);
+    const url = urlJoin(this.config.baseUrl, this.config.path);
 
     const res = await got.post(url, {
       headers: {
@@ -316,7 +316,7 @@ export class Utorrent implements TorrentClient {
   }
 
   async connect(): Promise<void> {
-    const url = urljoin(this.config.baseUrl, this.config.path, '/token.html');
+    const url = urlJoin(this.config.baseUrl, this.config.path, '/token.html');
 
     const headers = {
       Authorization: this._authorization(),
@@ -376,7 +376,7 @@ export class Utorrent implements TorrentClient {
       params.set('action', action);
     }
 
-    const url = urljoin(this.config.baseUrl, this.config.path);
+    const url = urlJoin(this.config.baseUrl, this.config.path);
     return got.get<T>(url, {
       headers: {
         Authorization: this._authorization(),
