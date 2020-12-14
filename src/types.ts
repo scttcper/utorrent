@@ -121,7 +121,7 @@ export type TorrentData = [
   string,
   number,
   string,
-  boolean
+  boolean,
 ];
 
 export interface RssUpdateResponse extends BaseResponse {

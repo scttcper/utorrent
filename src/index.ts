@@ -135,7 +135,7 @@ export class Utorrent implements TorrentClient {
     return res.body;
   }
 
-  async setProps(hash: string, props: { [key: string]: string | number }): Promise<BaseResponse> {
+  async setProps(hash: string, props: Record<string, string | number>): Promise<BaseResponse> {
     const params = new URLSearchParams();
     for (const prop of Object.entries(props)) {
       params.set(prop[0], prop[1].toString());
@@ -241,18 +241,20 @@ export class Utorrent implements TorrentClient {
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
 
-    const res = await got.post(url, {
-      headers: {
-        'Content-Type': undefined,
-        Authorization: this._authorization(),
-        Cookie: this._cookie?.cookieString(),
-      },
-      searchParams: params,
-      body: form,
-      retry: 0,
-      timeout: this.config.timeout,
-      agent: this.config.agent,
-    }).json<BaseResponse>();
+    const res = await got
+      .post(url, {
+        headers: {
+          'Content-Type': undefined,
+          Authorization: this._authorization(),
+          Cookie: this._cookie?.cookieString(),
+        },
+        searchParams: params,
+        body: form,
+        retry: 0,
+        timeout: this.config.timeout,
+        agent: this.config.agent,
+      })
+      .json<BaseResponse>();
 
     return res;
   }
@@ -338,9 +340,7 @@ export class Utorrent implements TorrentClient {
     }
 
     const res = await got.get(url, options);
-    this._cookie = Cookie.parse(
-      (res.headers?.['set-cookie']?.[0]) ?? '',
-    );
+    this._cookie = Cookie.parse(res.headers?.['set-cookie']?.[0] ?? '');
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
