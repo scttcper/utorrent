@@ -2,10 +2,9 @@ import { existsSync, readFileSync } from 'fs';
 import { URLSearchParams } from 'url';
 
 import FormData from 'form-data';
-import got, { Response, OptionsOfTextResponseBody } from 'got';
+import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
-import { urlJoin } from '@ctrl/url-join';
-import { hash } from '@ctrl/torrent-file';
+
 import {
   AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
@@ -14,6 +13,8 @@ import {
   TorrentSettings,
   TorrentState,
 } from '@ctrl/shared-torrent';
+import { hash } from '@ctrl/torrent-file';
+import { urlJoin } from '@ctrl/url-join';
 
 import {
   BaseResponse,
@@ -237,7 +238,7 @@ export class Utorrent implements TorrentClient {
     params.set('download_dir', '0');
     params.set('path', '');
     params.set('action', 'add-file');
-    params.set('token', this._token as string);
+    params.set('token', this._token!);
 
     const url = urlJoin(this.config.baseUrl, this.config.path);
 
@@ -369,7 +370,7 @@ export class Utorrent implements TorrentClient {
       await this.connect();
     }
 
-    params.set('token', this._token as string);
+    params.set('token', this._token!);
     params.set('t', Date.now().toString());
     // allows action to be an empty string
     if (action) {

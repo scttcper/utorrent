@@ -1,6 +1,7 @@
-import { expect, describe, afterEach, it } from '@jest/globals';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+
+import { afterEach, describe, expect, it } from '@jest/globals';
 
 import { Utorrent } from '../src';
 
