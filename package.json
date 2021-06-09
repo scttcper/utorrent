@@ -21,7 +21,7 @@
     "lint:fix": "eslint --fix --ext .js,.ts, .",
     "prepare": "npm run build",
     "build": "tsc -p tsconfig.build.json",
-    "build:docs": "typedoc --out docs --hideGenerator --target ES6 --mode file src && touch docs/.nojekyll",
+    "build:docs": "typedoc",
     "test": "jest",
     "test:watch": "npm run test -- --watch",
     "test:ci": "npm run test -- --ci --reporters=default --reporters=jest-junit --coverage",

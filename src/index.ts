@@ -435,6 +435,8 @@ export class Utorrent implements TorrentClient {
       state = TorrentState.paused;
     }
 
+    console.log(torrent[23]);
+    console.log(torrent[24]);
     const result: NormalizedTorrent = {
       id: torrent[0].toLowerCase(),
       name: torrent[2],
