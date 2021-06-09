@@ -435,8 +435,6 @@ export class Utorrent implements TorrentClient {
       state = TorrentState.paused;
     }
 
-    console.log(torrent[23]);
-    console.log(torrent[24]);
     const result: NormalizedTorrent = {
       id: torrent[0].toLowerCase(),
       name: torrent[2],
@@ -445,8 +443,8 @@ export class Utorrent implements TorrentClient {
       stateMessage: '',
       progress,
       ratio: torrent[7] / 1000,
-      dateAdded: new Date(torrent[23]).toISOString(),
-      dateCompleted: new Date(torrent[24]).toISOString(),
+      dateAdded: new Date(torrent[23] * 1000).toISOString(),
+      dateCompleted: new Date(torrent[24] * 1000).toISOString(),
       label: torrent[11],
       savePath: torrent[26],
       uploadSpeed: torrent[8],
