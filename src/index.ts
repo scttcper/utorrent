@@ -403,10 +403,14 @@ export class Utorrent implements TorrentClient {
     const done = progress >= 100;
     const isCompleted = progress >= 100;
 
+    // TODO: Convert from bitwise
+
     let state = TorrentState.unknown;
+    // eslint-disable-next-line no-bitwise
     if (torrentState & STATE_PAUSED) {
       // paused
       state = TorrentState.paused;
+      // eslint-disable-next-line no-bitwise
     } else if (torrentState & STATE_STARTED) {
       // started, seeding or leeching
       if (done) {
@@ -418,12 +422,15 @@ export class Utorrent implements TorrentClient {
       //   // forced start
       //   res[1] = '[F] ' + res[1];
       // }
+      // eslint-disable-next-line no-bitwise
     } else if (torrentState & STATE_CHECKING) {
       // checking
       state = TorrentState.checking;
+      // eslint-disable-next-line no-bitwise
     } else if (torrentState & STATE_ERROR) {
       // error
       state = TorrentState.error;
+      // eslint-disable-next-line no-bitwise
     } else if (torrentState & STATE_QUEUED) {
       // queued
       state = TorrentState.queued;
