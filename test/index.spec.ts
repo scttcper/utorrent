@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from '@jest/globals';
 
 import { Utorrent } from '../src';
 
-const baseUrl = process.env.BASE_URL ?? 'http://localhost:44822/';
+const baseUrl = process.env.BASE_URL ?? 'http://localhost:8080/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
 const torrentFile = path.join(__dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
 
