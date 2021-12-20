@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { URLSearchParams } from 'url';
 
-import { Blob, FormData } from 'formdata-node';
+import { FormData } from 'formdata-node';
 import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
