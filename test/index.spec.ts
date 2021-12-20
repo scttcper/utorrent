@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import test, { ExecutionContext } from 'ava';
@@ -26,7 +26,7 @@ test.afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-test.serial('should be instantiable', t => {
+test('should be instantiable', t => {
   const client = new Utorrent({ baseUrl });
   t.truthy(client);
 });
@@ -41,15 +41,21 @@ test.serial('should disconnect', async t => {
   client.resetSession();
   t.is((client as any)._token, undefined);
 });
-test.serial('should add torrent from string', async t => {
+test.serial('should add torrent from buffer', async t => {
   const client = new Utorrent({ baseUrl });
-  await client.addTorrent(await fs.readFile(torrentFile));
+  await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
   t.is(res.torrents.length, 1);
 });
 test.serial('should add torrent from path', async t => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(torrentFile);
+  const res = await client.listTorrents();
+  t.is(res.torrents.length, 1);
+});
+test.serial('should add torrent from string', async t => {
+  const client = new Utorrent({ baseUrl });
+  await client.addTorrent(readFileSync(torrentFile).toString('base64'));
   const res = await client.listTorrents();
   t.is(res.torrents.length, 1);
 });
@@ -109,7 +115,7 @@ test.serial('should return normalized torrent data', async t => {
 test.serial('should add torrent with normalized response', async t => {
   const client = new Utorrent({ baseUrl });
 
-  const torrent = await client.normalizedAddTorrent(await fs.readFile(torrentFile), {
+  const torrent = await client.normalizedAddTorrent(readFileSync(torrentFile), {
     label: 'test',
   });
   t.is(torrent.connectedPeers, 0);

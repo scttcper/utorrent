@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { URLSearchParams } from 'url';
 
-import { FormData } from 'formdata-node';
+import { File, FormData } from 'formdata-node';
 import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
@@ -225,10 +225,20 @@ export class Utorrent implements TorrentClient {
       if (existsSync(torrent)) {
         form.set('torrent_file', fileFromPathSync(torrent));
       } else {
-        form.set('torrent_file', torrent);
+        form.set(
+          'torrent_file',
+          new File([Buffer.from(torrent, 'base64')], 'file.torrent', {
+            type: 'application/x-bittorrent',
+          }),
+        );
       }
     } else {
-      form.set('torrent_file', torrent);
+      form.set(
+        'torrent_file',
+        new File([torrent], 'file.torrent', {
+          type: 'application/x-bittorrent',
+        }),
+      );
     }
 
     const params = new URLSearchParams();
@@ -249,7 +259,7 @@ export class Utorrent implements TorrentClient {
         body: form,
         retry: { limit: 0 },
         timeout: { request: this.config.timeout },
-        agent: this.config.agent,
+        ...(this.config.agent ? { agent: this.config.agent } : {}),
       })
       .json<BaseResponse>();
 
@@ -382,7 +392,7 @@ export class Utorrent implements TorrentClient {
       searchParams: params,
       retry: { limit: 0 },
       timeout: { request: this.config.timeout },
-      agent: this.config.agent,
+      ...(this.config.agent ? { agent: this.config.agent } : {}),
       responseType: 'json',
     });
   }
