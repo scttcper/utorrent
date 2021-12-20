@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { URLSearchParams } from 'url';
 
-import { FormData } from 'formdata-node';
+import { Blob, FormData } from 'formdata-node';
 import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
@@ -224,13 +224,23 @@ export class Utorrent implements TorrentClient {
     if (typeof torrent === 'string') {
       if (existsSync(torrent)) {
         const file = fileFromPathSync(torrent);
-        console.log(file.type);
-        form.set('torrent_file', file);
+        const arrayBuffer = await file.arrayBuffer();
+        form.append(
+          'torrent_file',
+          new Blob([new Uint8Array(arrayBuffer)], {
+            type: 'application/x-bittorrent',
+          }),
+        );
       } else {
-        form.set('torrent_file', Buffer.from(torrent, 'base64'));
+        form.set(
+          'torrent_file',
+          new Blob([torrent], {
+            type: 'application/x-bittorrent',
+          }),
+        );
       }
     } else {
-      form.append('torrent_file', torrent);
+      form.set('torrent_file', torrent);
     }
 
     const params = new URLSearchParams();
