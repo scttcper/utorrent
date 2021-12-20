@@ -7,7 +7,8 @@ import { Utorrent } from '../src/index.js';
 
 const baseUrl = process.env['BASE_URL'] ?? 'http://localhost:44822/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
-const torrentFile = path.join(__dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
+const dirname = new URL('.', import.meta.url).pathname;
+const torrentFile = path.join(dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
 
 async function setupTorrent(client: Utorrent, t: ExecutionContext): Promise<string> {
   await client.addTorrent(torrentFile);
