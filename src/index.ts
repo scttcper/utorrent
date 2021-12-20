@@ -1,7 +1,8 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { URLSearchParams } from 'url';
 
-import FormData from 'form-data';
+import { FormData } from 'formdata-node';
+import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
 
@@ -23,7 +24,7 @@ import {
   TorrentData,
   TorrentListResponse,
   VersionResponse,
-} from './types';
+} from './types.js';
 
 const defaults: TorrentSettings = {
   baseUrl: 'http://localhost:44822/',
@@ -222,16 +223,14 @@ export class Utorrent implements TorrentClient {
     const form = new FormData();
     if (typeof torrent === 'string') {
       if (existsSync(torrent)) {
-        form.append('torrent_file', Buffer.from(readFileSync(torrent)), {
-          contentType: 'application/x-bittorrent',
-        });
+        const file = fileFromPathSync(torrent);
+        console.log(file.type);
+        form.set('torrent_file', file);
       } else {
-        form.append('torrent_file', Buffer.from(torrent, 'base64'), {
-          contentType: 'application/x-bittorrent',
-        });
+        form.set('torrent_file', Buffer.from(torrent, 'base64'));
       }
     } else {
-      form.append('torrent_file', torrent, { contentType: 'application/x-bittorrent' });
+      form.append('torrent_file', torrent);
     }
 
     const params = new URLSearchParams();
@@ -251,8 +250,8 @@ export class Utorrent implements TorrentClient {
         },
         searchParams: params,
         body: form,
-        retry: 0,
-        timeout: this.config.timeout,
+        retry: { limit: 0 },
+        timeout: { request: this.config.timeout },
         agent: this.config.agent,
       })
       .json<BaseResponse>();
@@ -329,11 +328,11 @@ export class Utorrent implements TorrentClient {
     const options: OptionsOfTextResponseBody = {
       headers,
       searchParams: params,
-      retry: 0,
+      retry: { limit: 0 },
       responseType: 'text',
     };
     if (this.config.timeout) {
-      options.timeout = this.config.timeout;
+      options.timeout = { request: this.config.timeout };
     }
 
     if (this.config.agent) {
@@ -384,8 +383,8 @@ export class Utorrent implements TorrentClient {
         Cookie: this._cookie?.cookieString(),
       },
       searchParams: params,
-      retry: 0,
-      timeout: this.config.timeout,
+      retry: { limit: 0 },
+      timeout: { request: this.config.timeout },
       agent: this.config.agent,
       responseType: 'json',
     });

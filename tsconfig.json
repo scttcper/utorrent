@@ -1,16 +1,7 @@
 {
-  "compileOnSave": false,
+  "extends": "@sindresorhus/tsconfig",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "lib": ["es2019"],
-    "target": "es2018",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "noUnusedLocals": true,
-    "declaration": true,
-    "sourceMap": false,
+    "lib": ["ES2020", "DOM"],
     "outDir": "dist"
   }
 }
