@@ -29,7 +29,7 @@ test.afterEach(async () => {
 test.serial('should be instantiable', async t => {
   const client = new Utorrent({ baseUrl });
   t.truthy(client);
-  t.is(await client.getAllData(), { labels: [], torrents: [] });
+  t.deepEqual(await client.getAllData(), { labels: [], torrents: [] });
 });
 test.serial('should connect', async t => {
   const client = new Utorrent({ baseUrl });
