@@ -1,7 +1,6 @@
 import { existsSync } from 'fs';
 import { URLSearchParams } from 'url';
 
-import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'formdata-node';
 import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
@@ -232,7 +231,6 @@ export class Utorrent implements TorrentClient {
       form.set('torrent_file', torrent);
     }
 
-    const encoder = new FormDataEncoder(form);
     const params = new URLSearchParams();
     params.set('download_dir', '0');
     params.set('path', '');
@@ -246,10 +244,9 @@ export class Utorrent implements TorrentClient {
         headers: {
           Authorization: this._authorization(),
           Cookie: this._cookie?.cookieString(),
-          ...encoder.headers,
         },
         searchParams: params,
-        body: encoder.encode(),
+        body: form,
         retry: { limit: 0 },
         timeout: { request: this.config.timeout },
         agent: this.config.agent,

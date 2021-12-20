@@ -26,10 +26,9 @@ test.afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-test.serial('should be instantiable', async t => {
+test.serial('should be instantiable', t => {
   const client = new Utorrent({ baseUrl });
   t.truthy(client);
-  t.deepEqual(await client.getAllData(), { labels: [], torrents: [] });
 });
 test.serial('should connect', async t => {
   const client = new Utorrent({ baseUrl });
