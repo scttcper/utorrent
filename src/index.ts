@@ -223,21 +223,9 @@ export class Utorrent implements TorrentClient {
     const form = new FormData();
     if (typeof torrent === 'string') {
       if (existsSync(torrent)) {
-        const file = fileFromPathSync(torrent);
-        const arrayBuffer = await file.arrayBuffer();
-        form.append(
-          'torrent_file',
-          new Blob([new Uint8Array(arrayBuffer)], {
-            type: 'application/x-bittorrent',
-          }),
-        );
+        form.set('torrent_file', fileFromPathSync(torrent));
       } else {
-        form.set(
-          'torrent_file',
-          new Blob([torrent], {
-            type: 'application/x-bittorrent',
-          }),
-        );
+        form.set('torrent_file', torrent);
       }
     } else {
       form.set('torrent_file', torrent);

@@ -42,9 +42,15 @@ test.serial('should disconnect', async t => {
   client.resetSession();
   t.is((client as any)._token, undefined);
 });
-test.serial('should add torrent', async t => {
+test.serial('should add torrent from string', async t => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(await fs.readFile(torrentFile));
+  const res = await client.listTorrents();
+  t.is(res.torrents.length, 1);
+});
+test.serial('should add torrent from path', async t => {
+  const client = new Utorrent({ baseUrl });
+  await client.addTorrent(torrentFile);
   const res = await client.listTorrents();
   t.is(res.torrents.length, 1);
 });
