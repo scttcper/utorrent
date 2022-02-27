@@ -6,6 +6,7 @@ import { fileFromPathSync } from 'formdata-node/file-from-path';
 import got, { OptionsOfTextResponseBody, Response } from 'got';
 import { Cookie } from 'tough-cookie';
 
+import { magnetDecode } from '@ctrl/magnet-link';
 import {
   AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
@@ -153,13 +154,22 @@ export class Utorrent implements TorrentClient {
     torrent: string | Buffer,
     options: Partial<NormalizedAddTorrentOptions> = {},
   ): Promise<NormalizedTorrent> {
-    if (!Buffer.isBuffer(torrent)) {
-      torrent = Buffer.from(torrent);
+    let torrentHash: string | undefined;
+    if (typeof torrent === 'string' && torrent.startsWith('magnet:')) {
+      torrentHash = magnetDecode(torrent).infoHash;
+      if (!torrentHash) {
+        throw new Error('Magnet did not contain hash');
+      }
+
+      await this.addTorrentFromUrl(torrent);
+    } else {
+      if (!Buffer.isBuffer(torrent)) {
+        torrent = Buffer.from(torrent);
+      }
+
+      torrentHash = await hash(torrent);
+      await this.addTorrent(torrent);
     }
-
-    const torrentHash = await hash(torrent);
-
-    await this.addTorrent(torrent);
 
     if (options.startPaused) {
       await this.pauseTorrent(torrentHash);
@@ -221,24 +231,16 @@ export class Utorrent implements TorrentClient {
     }
 
     const form = new FormData();
+    const type = { type: 'application/x-bittorrent' };
     if (typeof torrent === 'string') {
       if (existsSync(torrent)) {
-        form.set('torrent_file', fileFromPathSync(torrent));
+        form.set('torrent_file', fileFromPathSync(torrent, 'file.torrent', type));
       } else {
-        form.set(
-          'torrent_file',
-          new File([Buffer.from(torrent, 'base64')], 'file.torrent', {
-            type: 'application/x-bittorrent',
-          }),
-        );
+        form.set('torrent_file', new File([Buffer.from(torrent, 'base64')], 'file.torrent', type));
       }
     } else {
-      form.set(
-        'torrent_file',
-        new File([torrent], 'file.torrent', {
-          type: 'application/x-bittorrent',
-        }),
-      );
+      const file = new File([torrent], 'file.torrent', type);
+      form.set('torrent_file', file);
     }
 
     const params = new URLSearchParams();
@@ -264,6 +266,16 @@ export class Utorrent implements TorrentClient {
       .json<BaseResponse>();
 
     return res;
+  }
+
+  /**
+   * Add torrent from url, probably a magnet
+   */
+  async addTorrentFromUrl(urlOrMagnet: string): Promise<BaseResponse> {
+    const params = new URLSearchParams();
+    params.append('s', urlOrMagnet);
+    const res = await this.request<BaseResponse>('add-url', params);
+    return res.body;
   }
 
   /**
