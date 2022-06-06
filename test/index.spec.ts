@@ -1,25 +1,25 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import test, { ExecutionContext } from 'ava';
+import { afterEach, expect, it } from 'vitest';
 
 import { Utorrent } from '../src/index.js';
 
-const baseUrl = process.env['BASE_URL'] ?? 'http://localhost:8080/';
+const baseUrl = 'http://localhost:8080/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
 const dirname = new URL('.', import.meta.url).pathname;
 const torrentFile = path.join(dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
 const magnet =
   'magnet:?xt=urn:btih:B0B81206633C42874173D22E564D293DAEFC45E2&dn=Ubuntu+11+10+Alternate+Amd64+Iso&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce';
 
-async function setupTorrent(client: Utorrent, t: ExecutionContext): Promise<string> {
+async function setupTorrent(client: Utorrent): Promise<string> {
   await client.addTorrent(torrentFile);
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 1);
+  expect(res.torrents).toHaveLength(1);
   return res.torrents[0]![0];
 }
 
-test.afterEach(async () => {
+afterEach(async () => {
   const client = new Utorrent({ baseUrl });
   const res = await client.listTorrents();
   for (const torrent of res.torrents) {
@@ -28,143 +28,139 @@ test.afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-test('should be instantiable', t => {
-  const client = new Utorrent({ baseUrl });
-  t.truthy(client);
-});
-test.serial('should connect', async t => {
+it('should connect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
-  t.assert((client as any)._token.length > 0);
+  expect((client as any)._token.length).toBeGreaterThan(0);
 });
-test.serial('should disconnect', async t => {
+it('should disconnect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
   client.resetSession();
-  t.is((client as any)._token, undefined);
+  expect((client as any)._token).toBeUndefined();
 });
-test.serial('should add torrent from buffer', async t => {
+it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 1);
+  expect(res.torrents).toHaveLength(1);
 });
-test.serial('should add torrent from path', async t => {
+it('should add torrent from path', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(torrentFile);
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 1);
+  expect(res.torrents.length).toBe(1);
 });
-test.serial('should add torrent from string', async t => {
+it('should add torrent from string', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile).toString('base64'));
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 1);
+  expect(res.torrents.length).toBe(1);
 });
-test.serial('should get settings', async t => {
+it('should get settings', async () => {
   const client = new Utorrent({ baseUrl });
   const res = await client.getSettings();
-  t.assert(res.settings instanceof Array);
+  expect(res.settings).toBeInstanceOf(Array);
 });
-test.serial('should list torrents', async t => {
+it('should list torrents', async () => {
   const client = new Utorrent({ baseUrl });
-  await setupTorrent(client, t);
+  await setupTorrent(client);
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 1);
-  t.is(res.torrents[0]?.[2], torrentName);
+  expect(res.torrents).toHaveLength(1);
+  expect(res.torrents[0]![2]).toBe(torrentName);
 });
-test.serial('should move torrents in queue', async t => {
+it('should move torrents in queue', async () => {
   const client = new Utorrent({ baseUrl });
-  const key = await setupTorrent(client, t);
+  const key = await setupTorrent(client);
   await client.queueUp(key);
   await client.queueDown(key);
   await client.queueTop(key);
   await client.queueBottom(key);
 });
-test.serial('should remove torrent', async t => {
+it('should remove torrent', async () => {
   const client = new Utorrent({ baseUrl });
-  const key = await setupTorrent(client, t);
+  const key = await setupTorrent(client);
   await client.removeTorrent(key);
   const res = await client.listTorrents();
-  t.is(res.torrents.length, 0);
+  expect(res.torrents).toHaveLength(0);
 });
-test.serial('should return normalized torrent data', async t => {
+it('should return normalized torrent data', async () => {
   const client = new Utorrent({ baseUrl });
-  await setupTorrent(client, t);
+  await setupTorrent(client);
   const res = await client.getAllData();
   const torrent = res.torrents[0]!;
-  t.is(torrent.connectedPeers, 0);
-  t.is(torrent.connectedSeeds, 0);
-  t.is(torrent.downloadSpeed, 0);
-  // t.is(torrent.eta, 0);
-  t.is(torrent.isCompleted, false);
-  t.is(torrent.label, '');
-  t.is(torrent.name, torrentName);
-  t.assert(torrent.progress >= 0);
-  t.is(torrent.queuePosition, 1);
-  t.is(torrent.ratio, 0);
-  // t.is(torrent.savePath, '/utorrent/data/incomplete');
-  // t.is(torrent.state, TorrentState.queued);
-  t.is(torrent.stateMessage, '');
-  t.is(torrent.totalDownloaded, 0);
-  t.is(torrent.totalPeers, 0);
-  t.is(torrent.totalSeeds, 0);
-  // t.is(torrent.totalSelected, 1953349632);
-  // t.is(torrent.totalSize, 1953349632);
-  t.is(torrent.totalUploaded, 0);
-  t.is(torrent.uploadSpeed, 0);
+  expect(torrent.connectedPeers).toBe(0);
+  expect(torrent.connectedSeeds).toBe(0);
+  expect(torrent.downloadSpeed).toBe(0);
+  // expect(torrent.eta).toBe(0);
+  expect(torrent.isCompleted).toBe(false);
+  expect(torrent.label).toBe('');
+  expect(torrent.name).toBe(torrentName);
+  expect(torrent.progress).toBeGreaterThanOrEqual(0);
+  expect(torrent.queuePosition).toBe(1);
+  expect(torrent.ratio).toBe(0);
+  // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
+  // expect(torrent.state).toBe(TorrentState.queued);
+  expect(torrent.stateMessage).toBe('');
+  expect(torrent.totalDownloaded).toBe(0);
+  expect(torrent.totalPeers).toBe(0);
+  expect(torrent.totalSeeds).toBe(0);
+  // expect(torrent.totalSelected).toBe(1953349632);
+  // expect(torrent.totalSize).toBe(1953349632);
+  expect(torrent.totalUploaded).toBe(0);
+  expect(torrent.uploadSpeed).toBe(0);
 });
-test.serial('should add torrent with normalized response', async t => {
+it('should add torrent with normalized response', async () => {
   const client = new Utorrent({ baseUrl });
 
   const torrent = await client.normalizedAddTorrent(readFileSync(torrentFile), {
     label: 'test',
   });
-  t.is(torrent.connectedPeers, 0);
-  t.is(torrent.connectedSeeds, 0);
-  t.is(torrent.downloadSpeed, 0);
-  // t.is(torrent.eta, 0);
-  t.is(torrent.isCompleted, false);
-  t.is(torrent.label, 'test');
-  t.is(torrent.name, torrentName);
-  t.assert(torrent.progress >= 0);
-  t.is(torrent.queuePosition, 1);
-  t.is(torrent.ratio, 0);
-  // t.is(torrent.savePath, '/utorrent/data/incomplete');
-  // t.is(torrent.state, TorrentState.queued);
-  t.is(torrent.stateMessage, '');
-  t.is(torrent.totalDownloaded, 0);
-  t.is(torrent.totalPeers, 0);
-  t.is(torrent.totalSeeds, 0);
-  // t.is(torrent.totalSelected, 1953349632);
-  // t.is(torrent.totalSize, 1953349632);
-  t.is(torrent.totalUploaded, 0);
-  t.is(torrent.uploadSpeed, 0);
+  expect(torrent.connectedPeers).toBe(0);
+  expect(torrent.connectedSeeds).toBe(0);
+  expect(torrent.downloadSpeed).toBe(0);
+  // expect(torrent.eta).toBe(0);
+  expect(torrent.isCompleted).toBe(false);
+  expect(torrent.label).toBe('test');
+  expect(torrent.name).toBe(torrentName);
+  expect(torrent.progress).toBeGreaterThanOrEqual(0);
+  expect(torrent.queuePosition).toBe(1);
+  expect(torrent.ratio).toBe(0);
+  // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
+  // expect(torrent.state).toBe(TorrentState.queued);
+  expect(torrent.stateMessage).toBe('');
+  expect(torrent.totalDownloaded).toBe(0);
+  expect(torrent.totalPeers).toBe(0);
+  expect(torrent.totalSeeds).toBe(0);
+  // expect(torrent.totalSelected).toBe(1953349632);
+  // expect(torrent.totalSize).toBe(1953349632);
+  expect(torrent.totalUploaded).toBe(0);
+  expect(torrent.uploadSpeed).toBe(0);
 });
-test.serial('should add torrent with normalized response from magnet', async t => {
+it('should add torrent with normalized response from magnet', async () => {
   const client = new Utorrent({ baseUrl });
 
   const torrent = await client.normalizedAddTorrent(magnet, {
     label: 'test',
   });
-  t.is(torrent.connectedPeers, 0);
-  t.is(torrent.connectedSeeds, 0);
-  t.is(torrent.downloadSpeed, 0);
+  expect(torrent.connectedPeers).toBe(0);
+  expect(torrent.connectedSeeds).toBe(0);
+  expect(torrent.downloadSpeed).toBe(0);
   // t.is(torrent.eta, 0);
-  t.is(torrent.isCompleted, false);
-  t.is(torrent.label, 'test');
-  t.is(torrent.name, 'Ubuntu 11 10 Alternate Amd64 Iso');
-  t.assert(torrent.progress >= 0);
-  t.is(torrent.queuePosition, 1);
-  t.is(torrent.ratio, 0);
+  expect(torrent.isCompleted).toBe(false);
+  expect(torrent.label).toBe('test');
+  expect(torrent.name).toBe('Ubuntu 11 10 Alternate Amd64 Iso');
+  expect(torrent.progress).toBeGreaterThanOrEqual(0);
+  expect(torrent.queuePosition).toBe(1);
+  expect(torrent.ratio).toBe(0);
   // t.is(torrent.savePath, '/utorrent/data/incomplete');
   // t.is(torrent.state, TorrentState.queued);
-  t.is(torrent.stateMessage, '');
-  t.is(torrent.totalDownloaded, 0);
-  t.is(torrent.totalPeers, 0);
-  t.is(torrent.totalSeeds, 0);
+  expect(torrent.stateMessage).toBe('');
+  expect(torrent.totalDownloaded).toBe(0);
+  expect(torrent.totalPeers).toBe(0);
+  expect(torrent.totalSeeds).toBe(0);
   // t.is(torrent.totalSelected, 1953349632);
   // t.is(torrent.totalSize, 1953349632);
-  t.is(torrent.totalUploaded, 0);
-  t.is(torrent.uploadSpeed, 0);
+  expect(torrent.totalUploaded).toBe(0);
+  expect(torrent.uploadSpeed).toBe(0);
 });
