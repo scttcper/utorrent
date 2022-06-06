@@ -28,10 +28,6 @@ afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-it('should be instantiable', () => {
-  const client = new Utorrent({ baseUrl });
-  expect(client).toBeTruthy();
-});
 it('should connect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
