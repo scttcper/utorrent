@@ -1,5 +1,6 @@
 {
   "entryPoints": ["src"],
+  "tsconfig": "tsconfig.json",
   "out": "docs",
   "excludePrivate": true,
   "excludeProtected": true,
