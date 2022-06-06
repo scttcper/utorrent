@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 import { afterEach, expect, it } from 'vitest';
 
@@ -45,17 +45,17 @@ it('should disconnect', async () => {
 });
 it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
-  await client.addTorrent(fs.readFileSync(torrentFile));
+  await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
 });
-expect('should add torrent from path', async () => {
+it('should add torrent from path', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(torrentFile);
   const res = await client.listTorrents();
   expect(res.torrents.length).toBe(1);
 });
-expect('should add torrent from string', async () => {
+it('should add torrent from string', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile).toString('base64'));
   const res = await client.listTorrents();
@@ -117,7 +117,7 @@ it('should return normalized torrent data', async () => {
 it('should add torrent with normalized response', async () => {
   const client = new Utorrent({ baseUrl });
 
-  const torrent = await client.normalizedAddTorrent(fs.readFileSync(torrentFile), {
+  const torrent = await client.normalizedAddTorrent(readFileSync(torrentFile), {
     label: 'test',
   });
   expect(torrent.connectedPeers).toBe(0);
