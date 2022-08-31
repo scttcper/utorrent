@@ -3,22 +3,23 @@ import { URLSearchParams } from 'url';
 
 import { File, FormData } from 'formdata-node';
 import { fileFromPathSync } from 'formdata-node/file-from-path';
-import got, { OptionsOfTextResponseBody, Response } from 'got';
+import type { OptionsOfTextResponseBody, Response } from 'got';
+import got from 'got';
 import { Cookie } from 'tough-cookie';
 
 import { magnetDecode } from '@ctrl/magnet-link';
-import {
+import type {
   AddTorrentOptions as NormalizedAddTorrentOptions,
   AllClientData,
   NormalizedTorrent,
   TorrentClient,
   TorrentSettings,
-  TorrentState,
 } from '@ctrl/shared-torrent';
+import { TorrentState } from '@ctrl/shared-torrent';
 import { hash } from '@ctrl/torrent-file';
 import { urlJoin } from '@ctrl/url-join';
 
-import {
+import type {
   BaseResponse,
   RssUpdateResponse,
   SettingsResponse,
