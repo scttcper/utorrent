@@ -201,6 +201,7 @@ export class Utorrent implements TorrentClient {
     const results: AllClientData = {
       torrents: [],
       labels: [],
+      raw: listTorrents,
     };
 
     for (const torrent of listTorrents.torrents) {
@@ -485,6 +486,7 @@ export class Utorrent implements TorrentClient {
       totalSize: torrent[3],
       totalUploaded: torrent[6],
       totalDownloaded: torrent[5],
+      raw: torrent,
     };
     return result;
   }
