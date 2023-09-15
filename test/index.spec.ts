@@ -13,7 +13,7 @@ const magnet =
   'magnet:?xt=urn:btih:B0B81206633C42874173D22E564D293DAEFC45E2&dn=Ubuntu+11+10+Alternate+Amd64+Iso&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce';
 
 async function setupTorrent(client: Utorrent): Promise<string> {
-  await client.addTorrent(torrentFile);
+  await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
   return res.torrents[0]![0];
@@ -28,7 +28,7 @@ afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-it.only('should connect', async () => {
+it('should connect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
   expect((client as any)._token.length).toBeGreaterThan(0);
@@ -39,17 +39,11 @@ it('should disconnect', async () => {
   client.resetSession();
   expect((client as any)._token).toBeUndefined();
 });
-it('should add torrent', async () => {
+it.only('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
-});
-it('should add torrent from path', async () => {
-  const client = new Utorrent({ baseUrl });
-  await client.addTorrent(torrentFile);
-  const res = await client.listTorrents();
-  expect(res.torrents.length).toBe(1);
 });
 it('should add torrent from string', async () => {
   const client = new Utorrent({ baseUrl });

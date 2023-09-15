@@ -1,5 +1,6 @@
 export interface BaseResponse {
   build: number;
+  error?: string;
 }
 
 export interface VersionResponse extends BaseResponse {

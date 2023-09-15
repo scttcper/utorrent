@@ -1,7 +1,7 @@
 import { FormData } from 'node-fetch-native';
 import { FetchOptions, FetchResponse, ofetch } from 'ofetch';
 import { Cookie } from 'tough-cookie';
-import { joinURL } from 'ufo';
+import { joinURL, } from 'ufo';
 
 import { magnetDecode } from '@ctrl/magnet-link';
 import type {
@@ -241,24 +241,27 @@ export class Utorrent implements TorrentClient {
     params.set('action', 'add-file');
     params.set('token', this._token!);
 
-    const url = joinURL(this.config.baseUrl, this.config.path ?? '');
+    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
 
-    const res = await ofetch<BaseResponse>(url, {
+    const res = await ofetch.raw<BaseResponse>(url, {
       method: 'POST',
       headers: {
         Authorization: this._authorization(),
         Cookie: this._cookie?.cookieString() ?? '',
-        'Content-Type': 'application/json',
       },
-      params,
       body: form,
       retry: 0,
       timeout: this.config.timeout,
+      responseType: 'json',
       // @ts-expect-error agent is not in the type
       agent: this.config.agent,
     });
 
-    return res;
+    if (res._data?.error) {
+      throw new Error(res._data.error);
+    }
+
+    return res._data!;
   }
 
   /**
@@ -383,31 +386,27 @@ export class Utorrent implements TorrentClient {
     }
 
     params.set('token', this._token!);
-    params.set('t', Date.now().toString());
+    // params.set('t', Date.now().toString());
     // allows action to be an empty string
     if (action) {
       params.set('action', action);
     }
 
-    const url = joinURL(this.config.baseUrl, this.config.path ?? '');
+    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
     const res = await ofetch.raw<T>(url, {
       method: 'GET',
       headers: {
         Authorization: this._authorization(),
         Cookie: this._cookie?.cookieString() ?? '',
       },
-      params,
       retry: 0,
       timeout: this.config.timeout,
       responseType: 'json',
+      parseResponse: JSON.parse,
       // @ts-expect-error agent is not in the type
       agent: this.config.agent,
     });
 
-    console.log({
-      Authorization: this._authorization(),
-      Cookie: this._cookie?.cookieString() ?? '',
-    });
 
     return res;
   }
