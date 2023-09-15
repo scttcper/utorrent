@@ -39,13 +39,13 @@ it('should disconnect', async () => {
   client.resetSession();
   expect((client as any)._token).toBeUndefined();
 });
-it.only('should add torrent', async () => {
+it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile));
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
 });
-it('should add torrent from string', async () => {
+it.only('should add torrent from string', async () => {
   const client = new Utorrent({ baseUrl });
   await client.addTorrent(readFileSync(torrentFile).toString('base64'));
   const res = await client.listTorrents();

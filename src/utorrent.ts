@@ -1,7 +1,10 @@
+import { Readable } from 'stream';
+
+import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { FetchOptions, FetchResponse, ofetch } from 'ofetch';
 import { Cookie } from 'tough-cookie';
-import { joinURL, } from 'ufo';
+import { joinURL } from 'ufo';
 
 import { magnetDecode } from '@ctrl/magnet-link';
 import type {
@@ -243,23 +246,22 @@ export class Utorrent implements TorrentClient {
 
     const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
 
+    // @ts-expect-error
+    const encoder = new FormDataEncoder(form);
     const res = await ofetch.raw<BaseResponse>(url, {
       method: 'POST',
       headers: {
         Authorization: this._authorization(),
         Cookie: this._cookie?.cookieString() ?? '',
+        ...encoder.headers,
       },
-      body: form,
+      body: Readable.from(encoder.encode()),
       retry: 0,
       timeout: this.config.timeout,
       responseType: 'json',
       // @ts-expect-error agent is not in the type
       agent: this.config.agent,
     });
-
-    if (res._data?.error) {
-      throw new Error(res._data.error);
-    }
 
     return res._data!;
   }
@@ -406,7 +408,6 @@ export class Utorrent implements TorrentClient {
       // @ts-expect-error agent is not in the type
       agent: this.config.agent,
     });
-
 
     return res;
   }
