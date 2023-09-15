@@ -87,3 +87,15 @@ console.log(res);
 deluge - https://github.com/scttcper/deluge  
 transmission - https://github.com/scttcper/transmission  
 qbittorrent - https://github.com/scttcper/qbittorrent  
+
+### Start a test docker container
+
+```
+docker run                                            \
+    --name utorrent                                   \
+    -v ~/Documents/utorrentt:/data                    \
+    -p 8080:8080                                      \
+    -p 6881:6881                                      \
+    -p 6881:6881/udp                                  \
+    ekho/utorrent:latest
+```

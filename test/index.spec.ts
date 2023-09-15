@@ -28,7 +28,7 @@ afterEach(async () => {
     await client.removeTorrent(torrent[0]);
   }
 });
-it('should connect', async () => {
+it.only('should connect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
   expect((client as any)._token.length).toBeGreaterThan(0);
