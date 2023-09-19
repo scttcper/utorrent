@@ -8,12 +8,13 @@ import { Utorrent } from '../src/index.js';
 const baseUrl = 'http://localhost:8080/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
 const dirname = new URL('.', import.meta.url).pathname;
-const torrentFile = path.join(dirname, '/ubuntu-18.04.1-desktop-amd64.iso.torrent');
+const torrentFilePath = path.join(dirname, 'ubuntu-18.04.1-desktop-amd64.iso.torrent');
+const torrentFileBuffer = readFileSync(torrentFilePath);
 const magnet =
   'magnet:?xt=urn:btih:B0B81206633C42874173D22E564D293DAEFC45E2&dn=Ubuntu+11+10+Alternate+Amd64+Iso&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce';
 
 async function setupTorrent(client: Utorrent): Promise<string> {
-  await client.addTorrent(readFileSync(torrentFile));
+  await client.addTorrent(torrentFileBuffer);
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
   return res.torrents[0]![0];
@@ -41,13 +42,13 @@ it('should disconnect', async () => {
 });
 it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
-  await client.addTorrent(readFileSync(torrentFile));
+  await client.addTorrent(torrentFileBuffer);
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(1);
 });
-it.only('should add torrent from string', async () => {
+it('should add torrent from string', async () => {
   const client = new Utorrent({ baseUrl });
-  await client.addTorrent(readFileSync(torrentFile).toString('base64'));
+  await client.addTorrent(torrentFileBuffer.toString('base64'));
   const res = await client.listTorrents();
   expect(res.torrents.length).toBe(1);
 });
@@ -107,7 +108,7 @@ it('should return normalized torrent data', async () => {
 it('should add torrent with normalized response', async () => {
   const client = new Utorrent({ baseUrl });
 
-  const torrent = await client.normalizedAddTorrent(readFileSync(torrentFile), {
+  const torrent = await client.normalizedAddTorrent(torrentFileBuffer, {
     label: 'test',
   });
   expect(torrent.connectedPeers).toBe(0);
