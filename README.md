@@ -1,7 +1,6 @@
 # utorrent
 
 [![npm](https://badgen.net/npm/v/@ctrl/utorrent)](https://www.npmjs.com/package/@ctrl/utorrent)
-[![CircleCI](https://badgen.net/circleci/github/scttcper/utorrent)](https://circleci.com/gh/scttcper/utorrent)
 [![coverage](https://badgen.net/codecov/c/github/scttcper/utorrent)](https://codecov.io/gh/scttcper/utorrent)
 
 > TypeScript api wrapper for [utorrent](https://www.utorrent.com) using [got](https://github.com/sindresorhus/got)
