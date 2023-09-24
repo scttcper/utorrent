@@ -1,11 +1,10 @@
-import { existsSync } from 'fs';
-import { URLSearchParams } from 'url';
+import { Readable } from 'stream';
 
-import { File, FormData } from 'formdata-node';
-import { fileFromPathSync } from 'formdata-node/file-from-path';
-import type { OptionsOfTextResponseBody, Response } from 'got';
-import got from 'got';
+import { FormDataEncoder } from 'form-data-encoder';
+import { FormData } from 'node-fetch-native';
+import { FetchOptions, FetchResponse, ofetch } from 'ofetch';
 import { Cookie } from 'tough-cookie';
+import { joinURL } from 'ufo';
 
 import { magnetDecode } from '@ctrl/magnet-link';
 import type {
@@ -15,15 +14,13 @@ import type {
   TorrentClient,
   TorrentSettings,
 } from '@ctrl/shared-torrent';
-import { TorrentState } from '@ctrl/shared-torrent';
 import { hash } from '@ctrl/torrent-file';
-import { urlJoin } from '@ctrl/url-join';
 
+import { normalizeTorrentData } from './normalizeTorrentData.js';
 import type {
   BaseResponse,
   RssUpdateResponse,
   SettingsResponse,
-  TorrentData,
   TorrentListResponse,
   VersionResponse,
 } from './types.js';
@@ -54,12 +51,12 @@ export class Utorrent implements TorrentClient {
 
   async getSettings(): Promise<SettingsResponse> {
     const res = await this.request<SettingsResponse>('getsettings');
-    return res.body;
+    return res._data!;
   }
 
   async getVersion(): Promise<VersionResponse> {
     const res = await this.request<VersionResponse>('getversion');
-    return res.body;
+    return res._data!;
   }
 
   /**
@@ -73,56 +70,56 @@ export class Utorrent implements TorrentClient {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('unpause', params);
-    return res.body;
+    return res._data!;
   }
 
   async forceStartTorrent(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('forcestart', params);
-    return res.body;
+    return res._data!;
   }
 
   async pauseTorrent(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('pause', params);
-    return res.body;
+    return res._data!;
   }
 
   async stopTorrent(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('stop', params);
-    return res.body;
+    return res._data!;
   }
 
   async queueUp(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('queueup', params);
-    return res.body;
+    return res._data!;
   }
 
   async queueDown(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('queuedown', params);
-    return res.body;
+    return res._data!;
   }
 
   async queueTop(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('queuetop', params);
-    return res.body;
+    return res._data!;
   }
 
   async queueBottom(hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
     const res = await this.request<BaseResponse>('queuebottom', params);
-    return res.body;
+    return res._data!;
   }
 
   async removeTorrent(hash: string, removeData = true): Promise<BaseResponse> {
@@ -136,7 +133,7 @@ export class Utorrent implements TorrentClient {
     }
 
     const res = await this.request<BaseResponse>(action, params);
-    return res.body;
+    return res._data!;
   }
 
   async setProps(hash: string, props: Record<string, string | number>): Promise<BaseResponse> {
@@ -148,7 +145,7 @@ export class Utorrent implements TorrentClient {
     params.set('hash', hash);
 
     const res = await this.request<BaseResponse>('setprops', params);
-    return res.body;
+    return res._data!;
   }
 
   async normalizedAddTorrent(
@@ -193,7 +190,7 @@ export class Utorrent implements TorrentClient {
       throw new Error('Torrent not found');
     }
 
-    return this._normalizeTorrentData(torrentData);
+    return normalizeTorrentData(torrentData);
   }
 
   async getAllData(): Promise<AllClientData> {
@@ -205,7 +202,7 @@ export class Utorrent implements TorrentClient {
     };
 
     for (const torrent of listTorrents.torrents) {
-      const torrentData: NormalizedTorrent = this._normalizeTorrentData(torrent);
+      const torrentData: NormalizedTorrent = normalizeTorrentData(torrent);
       results.torrents.push(torrentData);
     }
 
@@ -235,11 +232,7 @@ export class Utorrent implements TorrentClient {
     const form = new FormData();
     const type = { type: 'application/x-bittorrent' };
     if (typeof torrent === 'string') {
-      if (existsSync(torrent)) {
-        form.set('torrent_file', fileFromPathSync(torrent, 'file.torrent', type));
-      } else {
-        form.set('torrent_file', new File([Buffer.from(torrent, 'base64')], 'file.torrent', type));
-      }
+      form.set('torrent_file', new File([Buffer.from(torrent, 'base64')], 'file.torrent', type));
     } else {
       const file = new File([torrent], 'file.torrent', type);
       form.set('torrent_file', file);
@@ -251,23 +244,26 @@ export class Utorrent implements TorrentClient {
     params.set('action', 'add-file');
     params.set('token', this._token!);
 
-    const url = urlJoin(this.config.baseUrl, this.config.path);
+    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
 
-    const res = await got
-      .post(url, {
-        headers: {
-          Authorization: this._authorization(),
-          Cookie: this._cookie?.cookieString(),
-        },
-        searchParams: params,
-        body: form,
-        retry: { limit: 0 },
-        timeout: { request: this.config.timeout },
-        ...(this.config.agent ? { agent: this.config.agent } : {}),
-      })
-      .json<BaseResponse>();
+    // @ts-expect-error FormDataLike doesn't quite fit
+    const encoder = new FormDataEncoder(form);
+    const res = await ofetch.raw<BaseResponse>(url, {
+      method: 'POST',
+      headers: {
+        Authorization: this._authorization(),
+        Cookie: this._cookie?.cookieString() ?? '',
+        ...encoder.headers,
+      },
+      body: Readable.from(encoder.encode()),
+      retry: 0,
+      timeout: this.config.timeout,
+      responseType: 'json',
+      // @ts-expect-error agent is not in the type
+      agent: this.config.agent,
+    });
 
-    return res;
+    return res._data!;
   }
 
   /**
@@ -277,7 +273,7 @@ export class Utorrent implements TorrentClient {
     const params = new URLSearchParams();
     params.append('s', urlOrMagnet);
     const res = await this.request<BaseResponse>('add-url', params);
-    return res.body;
+    return res._data!;
   }
 
   /**
@@ -292,7 +288,7 @@ export class Utorrent implements TorrentClient {
     }
 
     const res = await this.request<VersionResponse>('setsetting', params);
-    return res.body;
+    return res._data!;
   }
 
   /**
@@ -321,53 +317,54 @@ export class Utorrent implements TorrentClient {
     params.set('smart-filter', Number(smartFilter).toString());
     params.set('enabled', JSON.stringify(enabled));
     const res = await this.request<RssUpdateResponse>('rss-update', params);
-    return res.body;
+    return res._data!;
   }
 
   async rssRemove(id: number): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('feedid', id.toString());
     const res = await this.request<BaseResponse>('rss-remove', params);
-    return res.body;
+    return res._data!;
   }
 
   async listTorrents(): Promise<TorrentListResponse> {
     const params = new URLSearchParams();
     params.set('list', '1');
     const res = await this.request<TorrentListResponse>('', params);
-    return res.body;
+    return res._data!;
   }
 
   async connect(): Promise<void> {
-    const url = urlJoin(this.config.baseUrl, this.config.path, '/token.html');
+    const url = joinURL(this.config.baseUrl, this.config.path ?? '', '/token.html');
 
     const headers = {
       Authorization: this._authorization(),
     };
     const params = new URLSearchParams();
     params.set('t', Date.now().toString());
-    const options: OptionsOfTextResponseBody = {
+    const options: FetchOptions<'text'> = {
       headers,
-      searchParams: params,
-      retry: { limit: 0 },
+      params,
+      retry: 0,
       responseType: 'text',
     };
     if (this.config.timeout) {
-      options.timeout = { request: this.config.timeout };
+      options.timeout = this.config.timeout;
     }
 
     if (this.config.agent) {
+      // @ts-expect-error agent is not in the type
       options.agent = this.config.agent;
     }
 
-    const res = await got.get(url, options);
-    this._cookie = Cookie.parse(res.headers?.['set-cookie']?.[0] ?? '');
+    const res = await ofetch.raw(url, options);
+    this._cookie = Cookie.parse(res.headers.get('set-cookie') ?? '');
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
-    const match = regex.exec(res.body);
+    const match = regex.exec(res._data!);
     if (match) {
-      this._token = match[match.length - 1];
+      this._token = match[1];
       return;
     }
 
@@ -378,7 +375,7 @@ export class Utorrent implements TorrentClient {
   async request<T extends object>(
     action: string,
     params: URLSearchParams = new URLSearchParams(),
-  ): Promise<Response<T>> {
+  ): Promise<FetchResponse<T>> {
     if (this._cookie) {
       // eslint-disable-next-line new-cap
       if (this._cookie.TTL() < 5000) {
@@ -391,24 +388,28 @@ export class Utorrent implements TorrentClient {
     }
 
     params.set('token', this._token!);
-    params.set('t', Date.now().toString());
+    // params.set('t', Date.now().toString());
     // allows action to be an empty string
     if (action) {
       params.set('action', action);
     }
 
-    const url = urlJoin(this.config.baseUrl, this.config.path);
-    return got.get<T>(url, {
+    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
+    const res = await ofetch.raw<T>(url, {
+      method: 'GET',
       headers: {
         Authorization: this._authorization(),
-        Cookie: this._cookie?.cookieString(),
+        Cookie: this._cookie?.cookieString() ?? '',
       },
-      searchParams: params,
-      retry: { limit: 0 },
-      timeout: { request: this.config.timeout },
-      ...(this.config.agent ? { agent: this.config.agent } : {}),
+      retry: 0,
+      timeout: this.config.timeout,
       responseType: 'json',
+      parseResponse: JSON.parse,
+      // @ts-expect-error agent is not in the type
+      agent: this.config.agent,
     });
+
+    return res;
   }
 
   private _authorization(): string {
@@ -416,84 +417,4 @@ export class Utorrent implements TorrentClient {
     const encoded = Buffer.from(str).toString('base64');
     return 'Basic ' + encoded;
   }
-
-  private _normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
-    const torrentState: number = torrent[1];
-    const progress: number = torrent[4] / 100;
-    const done = progress >= 100;
-    const isCompleted = progress >= 100;
-
-    // TODO: Convert from bitwise
-
-    let state = TorrentState.unknown;
-    // eslint-disable-next-line no-bitwise
-    if (torrentState & STATE_PAUSED) {
-      // paused
-      state = TorrentState.paused;
-      // eslint-disable-next-line no-bitwise
-    } else if (torrentState & STATE_STARTED) {
-      // started, seeding or leeching
-      if (done) {
-        state = TorrentState.seeding;
-      } else {
-        state = TorrentState.downloading;
-      }
-      // if (!(torrentState & STATE_QUEUED)) {
-      //   // forced start
-      //   res[1] = '[F] ' + res[1];
-      // }
-      // eslint-disable-next-line no-bitwise
-    } else if (torrentState & STATE_CHECKING) {
-      // checking
-      state = TorrentState.checking;
-      // eslint-disable-next-line no-bitwise
-    } else if (torrentState & STATE_ERROR) {
-      // error
-      state = TorrentState.error;
-      // eslint-disable-next-line no-bitwise
-    } else if (torrentState & STATE_QUEUED) {
-      // queued
-      state = TorrentState.queued;
-    } else if (done) {
-      // finished
-      state = TorrentState.paused;
-    } else {
-      // stopped
-      state = TorrentState.paused;
-    }
-
-    const result: NormalizedTorrent = {
-      id: torrent[0].toLowerCase(),
-      name: torrent[2],
-      state,
-      isCompleted,
-      stateMessage: '',
-      progress,
-      ratio: torrent[7] / 1000,
-      dateAdded: new Date(torrent[23] * 1000).toISOString(),
-      dateCompleted: new Date(torrent[24] * 1000).toISOString(),
-      label: torrent[11],
-      savePath: torrent[26],
-      uploadSpeed: torrent[8],
-      downloadSpeed: torrent[9],
-      eta: torrent[10],
-      queuePosition: torrent[17],
-      connectedPeers: torrent[12],
-      connectedSeeds: torrent[14],
-      totalPeers: torrent[13],
-      totalSeeds: torrent[15],
-      totalSelected: torrent[18],
-      totalSize: torrent[3],
-      totalUploaded: torrent[6],
-      totalDownloaded: torrent[5],
-      raw: torrent,
-    };
-    return result;
-  }
 }
-
-const STATE_STARTED = 1;
-const STATE_CHECKING = 2;
-const STATE_ERROR = 16;
-const STATE_PAUSED = 32;
-const STATE_QUEUED = 64;
