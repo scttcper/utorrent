@@ -246,7 +246,6 @@ export class Utorrent implements TorrentClient {
 
     const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
 
-    // @ts-expect-error FormDataLike doesn't quite fit
     const encoder = new FormDataEncoder(form);
     const res = await ofetch.raw<BaseResponse>(url, {
       method: 'POST',
