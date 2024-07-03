@@ -16,6 +16,7 @@ const magnet =
 async function setupTorrent(client: Utorrent): Promise<string> {
   await client.addTorrent(torrentFileBuffer);
   const res = await client.listTorrents();
+  // biome-ignore lint/nursery/noMisplacedAssertion: expect is not misplaced
   expect(res.torrents).toHaveLength(1);
   return res.torrents[0]![0];
 }

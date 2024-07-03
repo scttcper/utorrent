@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import { NormalizedTorrent, TorrentState } from '@ctrl/shared-torrent';
 
 import { TorrentData } from './types.js';
