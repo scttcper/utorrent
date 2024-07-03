@@ -2,9 +2,15 @@ import { Readable } from 'stream';
 
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
-import { FetchOptions, FetchResponse, ofetch } from 'ofetch';
+import { ofetch } from 'ofetch';
 import { Cookie } from 'tough-cookie';
 import { joinURL } from 'ufo';
+import {
+  base64ToUint8Array,
+  isUint8Array,
+  stringToBase64,
+  stringToUint8Array,
+} from 'uint8array-extras';
 
 import { magnetDecode } from '@ctrl/magnet-link';
 import type {
@@ -149,7 +155,7 @@ export class Utorrent implements TorrentClient {
   }
 
   async normalizedAddTorrent(
-    torrent: string | Buffer,
+    torrent: string | Uint8Array,
     options: Partial<NormalizedAddTorrentOptions> = {},
   ): Promise<NormalizedTorrent> {
     let torrentHash: string | undefined;
@@ -161,8 +167,8 @@ export class Utorrent implements TorrentClient {
 
       await this.addTorrentFromUrl(torrent);
     } else {
-      if (!Buffer.isBuffer(torrent)) {
-        torrent = Buffer.from(torrent);
+      if (!isUint8Array(torrent)) {
+        torrent = stringToUint8Array(torrent);
       }
 
       torrentHash = await hash(torrent);
@@ -217,7 +223,7 @@ export class Utorrent implements TorrentClient {
     return results;
   }
 
-  async addTorrent(torrent: string | Buffer): Promise<BaseResponse> {
+  async addTorrent(torrent: string | Uint8Array): Promise<BaseResponse> {
     if (this._cookie) {
       // eslint-disable-next-line new-cap
       if (this._cookie.TTL() < 5000) {
@@ -232,7 +238,7 @@ export class Utorrent implements TorrentClient {
     const form = new FormData();
     const type = { type: 'application/x-bittorrent' };
     if (typeof torrent === 'string') {
-      form.set('torrent_file', new File([Buffer.from(torrent, 'base64')], 'file.torrent', type));
+      form.set('torrent_file', new File([base64ToUint8Array(torrent)], 'file.torrent', type));
     } else {
       const file = new File([torrent], 'file.torrent', type);
       form.set('torrent_file', file);
@@ -279,7 +285,7 @@ export class Utorrent implements TorrentClient {
    * set a setting
    * @param settings settings to set [setting_name, value] as array of key value tuples
    */
-  async setSetting(settings: Array<[string, string | number]>): Promise<BaseResponse> {
+  async setSetting(settings: [string, string | number][]): Promise<BaseResponse> {
     const params = new URLSearchParams();
     for (const setting of settings) {
       params.append('s', setting[0]);
@@ -341,7 +347,7 @@ export class Utorrent implements TorrentClient {
     };
     const params = new URLSearchParams();
     params.set('t', Date.now().toString());
-    const options: FetchOptions<'text'> = {
+    const options: Parameters<typeof ofetch.raw>[1] = {
       headers,
       params,
       retry: 0,
@@ -361,7 +367,7 @@ export class Utorrent implements TorrentClient {
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
-    const match = regex.exec(res._data!);
+    const match = regex.exec(res._data);
     if (match) {
       this._token = match[1];
       return;
@@ -374,7 +380,7 @@ export class Utorrent implements TorrentClient {
   async request<T extends object>(
     action: string,
     params: URLSearchParams = new URLSearchParams(),
-  ): Promise<FetchResponse<T>> {
+  ): Promise<ReturnType<typeof ofetch.raw<T>>> {
     if (this._cookie) {
       // eslint-disable-next-line new-cap
       if (this._cookie.TTL() < 5000) {
@@ -413,7 +419,7 @@ export class Utorrent implements TorrentClient {
 
   private _authorization(): string {
     const str = `${this.config.username ?? ''}:${this.config.password ?? ''}`;
-    const encoded = Buffer.from(str).toString('base64');
+    const encoded = stringToBase64(str);
     return 'Basic ' + encoded;
   }
 }
