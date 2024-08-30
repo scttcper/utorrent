@@ -128,7 +128,10 @@ export class Utorrent implements TorrentClient {
     return res._data!;
   }
 
-  async removeTorrent(hash: string, removeData = true): Promise<BaseResponse> {
+  /**
+   * @param removeData (default: false) If true, remove the data from disk
+   */
+  async removeTorrent(hash: string, removeData = false): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
 
