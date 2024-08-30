@@ -26,7 +26,6 @@ afterEach(async () => {
   const res = await client.listTorrents();
   for (const torrent of res.torrents) {
     // clean up all torrents
-    // eslint-disable-next-line no-await-in-loop
     await client.removeTorrent(torrent[0]);
   }
 });

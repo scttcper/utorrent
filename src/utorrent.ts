@@ -379,7 +379,6 @@ export class Utorrent implements TorrentClient {
     throw new Error('Valid token not found');
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
   async request<T extends object>(
     action: string,
     params: URLSearchParams = new URLSearchParams(),
