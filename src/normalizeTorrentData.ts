@@ -1,7 +1,7 @@
 /* eslint-disable no-bitwise */
-import { NormalizedTorrent, TorrentState } from '@ctrl/shared-torrent';
+import { type NormalizedTorrent, TorrentState } from '@ctrl/shared-torrent';
 
-import { TorrentData } from './types.js';
+import type { TorrentData } from './types.js';
 
 const STATE_STARTED = 1;
 const STATE_CHECKING = 2;

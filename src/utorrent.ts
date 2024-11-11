@@ -174,7 +174,7 @@ export class Utorrent implements TorrentClient {
         torrent = stringToUint8Array(torrent);
       }
 
-      torrentHash = await hash(torrent);
+      torrentHash = hash(torrent);
       await this.addTorrent(torrent);
     }
 
@@ -267,8 +267,7 @@ export class Utorrent implements TorrentClient {
       retry: 0,
       timeout: this.config.timeout,
       responseType: 'json',
-      // @ts-expect-error agent is not in the type
-      agent: this.config.agent,
+      dispatcher: this.config.dispatcher,
     });
 
     return res._data!;
@@ -350,27 +349,19 @@ export class Utorrent implements TorrentClient {
     };
     const params = new URLSearchParams();
     params.set('t', Date.now().toString());
-    const options: Parameters<typeof ofetch.raw>[1] = {
+    const res = await ofetch.raw(url, {
       headers,
       params,
       retry: 0,
       responseType: 'text',
-    };
-    if (this.config.timeout) {
-      options.timeout = this.config.timeout;
-    }
-
-    if (this.config.agent) {
-      // @ts-expect-error agent is not in the type
-      options.agent = this.config.agent;
-    }
-
-    const res = await ofetch.raw(url, options);
+      dispatcher: this.config.dispatcher,
+      timeout: this.config.timeout,
+    });
     this._cookie = Cookie.parse(res.headers.get('set-cookie') ?? '');
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
-    const match = regex.exec(res._data);
+    const match = regex.exec(res._data ?? '');
     if (match) {
       this._token = match[1];
       return;
@@ -412,8 +403,7 @@ export class Utorrent implements TorrentClient {
       timeout: this.config.timeout,
       responseType: 'json',
       parseResponse: JSON.parse,
-      // @ts-expect-error agent is not in the type
-      agent: this.config.agent,
+      dispatcher: this.config.dispatcher,
     });
 
     return res;
