@@ -32,13 +32,13 @@ afterEach(async () => {
 it('should connect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
-  expect((client as any)._token.length).toBeGreaterThan(0);
+  expect(client.state.auth!.token.length).toBeGreaterThan(0);
 });
 it('should disconnect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
   client.resetSession();
-  expect((client as any)._token).toBeUndefined();
+  expect(client.state.auth).toBeUndefined();
 });
 it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });

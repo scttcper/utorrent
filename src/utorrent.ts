@@ -1,9 +1,9 @@
-import { Readable } from 'stream';
-
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
+import { Readable } from 'stream';
 import { Cookie } from 'tough-cookie';
+import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
 import {
   base64ToUint8Array,
@@ -19,6 +19,7 @@ import type {
   NormalizedTorrent,
   TorrentClient,
   TorrentSettings,
+  TorrentClientState,
 } from '@ctrl/shared-torrent';
 import { hash } from '@ctrl/torrent-file';
 
@@ -39,20 +40,59 @@ const defaults: TorrentSettings = {
   timeout: 5000,
 };
 
+interface UtorrentState extends TorrentClientState {
+  auth?: {
+    /** auth token extracted from `/token.html` */
+    token: string;
+    /** raw Set-Cookie header returned from server */
+    setCookie: string;
+    /** cookie expiration */
+    expires?: string;
+  };
+}
+
 export class Utorrent implements TorrentClient {
   config: TorrentSettings;
-
-  private _token?: string;
-
-  private _cookie?: Cookie;
+  state: UtorrentState = {};
 
   constructor(options: Partial<TorrentSettings> = {}) {
     this.config = { ...defaults, ...options };
   }
 
+  /**
+   * Create a new Utorrent client from a previously exported state
+   */
+  static createFromState(
+    config: Readonly<TorrentSettings>,
+    state: Readonly<Jsonify<UtorrentState>>,
+  ): Utorrent {
+    const client = new Utorrent(config);
+    client.state = {
+      ...state,
+      auth: state.auth
+        ? {
+            ...state.auth,
+            expires: state.auth.expires ? new Date(state.auth.expires).toISOString() : undefined,
+          }
+        : undefined,
+    };
+    return client;
+  }
+
+  /**
+   * Export the state of the client as JSON
+   */
+  exportState(): Jsonify<UtorrentState> {
+    return JSON.parse(JSON.stringify(this.state));
+  }
+
   resetSession(): void {
-    this._token = undefined;
-    this._cookie = undefined;
+    delete this.state.auth;
+  }
+
+  logout(): boolean {
+    this.resetSession();
+    return true;
   }
 
   async getSettings(): Promise<SettingsResponse> {
@@ -158,7 +198,7 @@ export class Utorrent implements TorrentClient {
   }
 
   async normalizedAddTorrent(
-    torrent: string | Uint8Array,
+    torrent: string | Uint8Array<ArrayBuffer>,
     options: Partial<NormalizedAddTorrentOptions> = {},
   ): Promise<NormalizedTorrent> {
     let torrentHash: string | undefined;
@@ -226,17 +266,8 @@ export class Utorrent implements TorrentClient {
     return results;
   }
 
-  async addTorrent(torrent: string | Uint8Array): Promise<BaseResponse> {
-    if (this._cookie) {
-      // eslint-disable-next-line new-cap
-      if (this._cookie.TTL() < 5000) {
-        this.resetSession();
-      }
-    }
-
-    if (!this._token) {
-      await this.connect();
-    }
+  async addTorrent(torrent: string | Uint8Array<ArrayBuffer>): Promise<BaseResponse> {
+    await this._ensureSession();
 
     const form = new FormData();
     const type = { type: 'application/x-bittorrent' };
@@ -251,7 +282,7 @@ export class Utorrent implements TorrentClient {
     params.set('download_dir', '0');
     params.set('path', '');
     params.set('action', 'add-file');
-    params.set('token', this._token!);
+    params.set('token', this.state.auth!.token);
 
     const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
 
@@ -260,7 +291,7 @@ export class Utorrent implements TorrentClient {
       method: 'POST',
       headers: {
         Authorization: this._authorization(),
-        Cookie: this._cookie?.cookieString() ?? '',
+        Cookie: this._cookieHeader(),
         ...encoder.headers,
       },
       body: Readable.from(encoder.encode()),
@@ -357,13 +388,21 @@ export class Utorrent implements TorrentClient {
       dispatcher: this.config.dispatcher,
       timeout: this.config.timeout,
     });
-    this._cookie = Cookie.parse(res.headers.get('set-cookie') ?? '');
+    const setCookie = res.headers.get('set-cookie') || '';
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
     const regex = />([^<]+)</;
     const match = regex.exec(res._data ?? '');
     if (match) {
-      this._token = match[1];
+      const token = match[1]!;
+      // persist auth state
+      const parsed = Cookie.parse(setCookie);
+      const expires = parsed && parsed.expires instanceof Date ? parsed.expires : undefined;
+      this.state.auth = {
+        token,
+        setCookie,
+        expires: expires ? new Date(expires).toISOString() : undefined,
+      };
       return;
     }
 
@@ -374,18 +413,9 @@ export class Utorrent implements TorrentClient {
     action: string,
     params: URLSearchParams = new URLSearchParams(),
   ): Promise<ReturnType<typeof ofetch.raw<T>>> {
-    if (this._cookie) {
-      // eslint-disable-next-line new-cap
-      if (this._cookie.TTL() < 5000) {
-        this.resetSession();
-      }
-    }
+    await this._ensureSession();
 
-    if (!this._token) {
-      await this.connect();
-    }
-
-    params.set('token', this._token!);
+    params.set('token', this.state.auth!.token);
     // params.set('t', Date.now().toString());
     // allows action to be an empty string
     if (action) {
@@ -397,7 +427,7 @@ export class Utorrent implements TorrentClient {
       method: 'GET',
       headers: {
         Authorization: this._authorization(),
-        Cookie: this._cookie?.cookieString() ?? '',
+        Cookie: this._cookieHeader(),
       },
       retry: 0,
       timeout: this.config.timeout,
@@ -413,5 +443,26 @@ export class Utorrent implements TorrentClient {
     const str = `${this.config.username ?? ''}:${this.config.password ?? ''}`;
     const encoded = stringToBase64(str);
     return 'Basic ' + encoded;
+  }
+
+  private async _ensureSession(): Promise<void> {
+    const expiresStr = this.state.auth?.expires;
+    const expires = expiresStr ? new Date(expiresStr) : undefined;
+    if (expires && expires.getTime() - Date.now() < 5000) {
+      this.resetSession();
+    }
+    if (!this.state.auth?.token) {
+      await this.connect();
+    }
+  }
+
+  private _cookieHeader(): string {
+    const setCookie = this.state.auth?.setCookie ?? '';
+    if (!setCookie) {
+      return '';
+    }
+
+    const parsed = Cookie.parse(setCookie);
+    return parsed?.cookieString() ?? '';
   }
 }

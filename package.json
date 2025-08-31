@@ -18,12 +18,8 @@
     "typescript"
   ],
   "scripts": {
-    "lint": "pnpm run '/^(lint:biome|lint:eslint)$/'",
-    "lint:biome": "biome check .",
-    "lint:eslint": "eslint .",
-    "lint:fix": "pnpm run '/^(lint:biome|lint:eslint):fix$/'",
-    "lint:eslint:fix": "eslint . --fix",
-    "lint:biome:fix": "biome check . --write",
+    "lint": "oxlint . && prettier --check . --experimental-cli",
+    "lint:fix": "oxlint . --fix && prettier --write . --log-level=error --experimental-cli",
     "prepare": "npm run build",
     "build": "tsc",
     "build:docs": "typedoc",
@@ -33,25 +29,28 @@
   },
   "dependencies": {
     "@ctrl/magnet-link": "^4.0.2",
-    "@ctrl/shared-torrent": "^6.1.0",
+    "@ctrl/shared-torrent": "^6.3.0",
     "@ctrl/torrent-file": "^4.1.0",
-    "form-data-encoder": "^4.0.2",
-    "node-fetch-native": "^1.6.4",
+    "form-data-encoder": "^4.1.0",
+    "node-fetch-native": "^1.6.7",
     "ofetch": "^1.4.1",
-    "tough-cookie": "^5.0.0",
-    "ufo": "^1.5.4",
-    "uint8array-extras": "^1.4.0"
+    "tough-cookie": "^6.0.0",
+    "type-fest": "^4.41.0",
+    "ufo": "^1.6.1",
+    "uint8array-extras": "^1.5.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@ctrl/eslint-config-biome": "4.2.11",
-    "@sindresorhus/tsconfig": "6.0.0",
-    "@types/node": "22.9.0",
+    "@ctrl/oxlint-config": "1.2.3",
+    "@sindresorhus/tsconfig": "8.0.1",
+    "@trivago/prettier-plugin-sort-imports": "5.2.2",
+    "@types/node": "24.3.0",
     "@types/tough-cookie": "4.0.5",
-    "@vitest/coverage-v8": "2.1.4",
-    "typedoc": "0.26.11",
-    "typescript": "5.6.3",
-    "vitest": "2.1.4"
+    "@vitest/coverage-v8": "3.2.4",
+    "oxlint": "1.14.0",
+    "prettier": "3.6.2",
+    "typedoc": "0.28.11",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
   },
   "publishConfig": {
     "access": "public",
@@ -64,5 +63,26 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "semi": true,
+    "printWidth": 100,
+    "plugins": [
+      "@trivago/prettier-plugin-sort-imports"
+    ],
+    "importOrder": [
+      "^node:.*$",
+      "<THIRD_PARTY_MODULES>",
+      "^(@ctrl)(/.*|$)",
+      "^\\.\\./(?!.*\\.css$)",
+      "^\\./(?!.*\\.css$)(?=.*/)",
+      "^\\./(?!.*\\.css$)(?!.*/)"
+    ],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": false
   }
 }

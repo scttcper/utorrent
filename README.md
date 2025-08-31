@@ -28,6 +28,41 @@ async function main() {
 }
 ```
 
+### Persisting auth state (export/restore)
+
+You can persist the authenticated session between runs to avoid logging in every time. Use `exportState()` to serialize, and `Utorrent.createFromState()` to restore.
+
+```ts
+import { Utorrent } from '@ctrl/utorrent';
+
+// First run: create client, it will authenticate on first request
+const client = new Utorrent({
+  baseUrl: 'http://localhost:44822/',
+  path: '/gui/',
+  password: 'admin',
+});
+
+// After doing some work, save state (persist somewhere, e.g., file/db)
+const stateJson = client.exportState();
+// Example: write to disk
+// await fs.promises.writeFile('utorrent-state.json', JSON.stringify(stateJson));
+
+// Next run: restore from saved state
+// const saved = JSON.parse(await fs.promises.readFile('utorrent-state.json', 'utf8'));
+const restored = Utorrent.createFromState(
+  {
+    baseUrl: 'http://localhost:44822/',
+    path: '/gui/',
+    password: 'admin',
+  },
+  stateJson,
+);
+
+// Use the restored client; it will reuse cookie/token until expiry
+const data = await restored.getAllData();
+console.log(data.torrents.length);
+```
+
 ### API
 
 DOCS: https://utorrent.vercel.app
@@ -85,7 +120,7 @@ console.log(res);
 
 deluge - https://github.com/scttcper/deluge  
 transmission - https://github.com/scttcper/transmission  
-qbittorrent - https://github.com/scttcper/qbittorrent  
+qbittorrent - https://github.com/scttcper/qbittorrent
 
 ### Start a test docker container
 
