@@ -13,15 +13,15 @@ jobs:
       utorrent:
         image: ekho/utorrent:latest
         ports:
-          - "8080:8080"
-          - "6881:6881"
-          - "6881:6881/udp"
+          - '8080:8080'
+          - '6881:6881'
+          - '6881:6881/udp'
     steps:
       - uses: actions/checkout@v4
 
       # https://github.com/wyvox/action-setup-pnpm
       - uses: wyvox/action-setup-pnpm@v3
-        with: { node-version: 24}
+        with: { node-version: 24 }
 
       - name: lint
         run: pnpm run lint

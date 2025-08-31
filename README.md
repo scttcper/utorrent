@@ -120,7 +120,7 @@ console.log(res);
 
 deluge - https://github.com/scttcper/deluge  
 transmission - https://github.com/scttcper/transmission  
-qbittorrent - https://github.com/scttcper/qbittorrent  
+qbittorrent - https://github.com/scttcper/qbittorrent
 
 ### Start a test docker container
 
