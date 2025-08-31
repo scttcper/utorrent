@@ -2,6 +2,7 @@ import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
 import { Readable } from 'stream';
+import { Cookie } from 'tough-cookie';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
 import {
@@ -395,10 +396,12 @@ export class Utorrent implements TorrentClient {
     if (match) {
       const token = match[1]!;
       // persist auth state
+      const parsed = Cookie.parse(setCookie);
+      const expires = parsed && parsed.expires instanceof Date ? parsed.expires : undefined;
       this.state.auth = {
         token,
         setCookie,
-        expires: this._parseCookieExpires(setCookie),
+        expires: expires ? new Date(expires).toISOString() : undefined,
       };
       return;
     }
@@ -455,30 +458,11 @@ export class Utorrent implements TorrentClient {
 
   private _cookieHeader(): string {
     const setCookie = this.state.auth?.setCookie ?? '';
-    if (!setCookie) return '';
-    const nameValue = setCookie.split(';')[0] ?? '';
-    return nameValue;
-  }
+    if (!setCookie) {
+      return '';
+    }
 
-  private _parseCookieExpires(setCookie: string): string | undefined {
-    if (!setCookie) return undefined;
-    const maxAgeMatch = /max-age=([^;]+)/i.exec(setCookie);
-    if (maxAgeMatch) {
-      const secs = Number(maxAgeMatch[1]);
-      if (!Number.isNaN(secs)) {
-        return new Date(Date.now() + secs * 1000).toISOString();
-      }
-    }
-    const expiresMatch = /expires=([^;]+)/i.exec(setCookie);
-    if (expiresMatch) {
-      const expiresStr = expiresMatch[1];
-      if (expiresStr) {
-        const d = new Date(expiresStr);
-        if (!Number.isNaN(d.getTime())) {
-          return d.toISOString();
-        }
-      }
-    }
-    return undefined;
+    const parsed = Cookie.parse(setCookie);
+    return parsed?.cookieString() ?? '';
   }
 }
