@@ -38,7 +38,7 @@ it('should disconnect', async () => {
   const client = new Utorrent({ baseUrl });
   await client.connect();
   client.resetSession();
-  expect(client.state.auth!.token).toBeUndefined();
+  expect(client.state.auth).toBeUndefined();
 });
 it('should add torrent', async () => {
   const client = new Utorrent({ baseUrl });
