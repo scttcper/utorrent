@@ -1,6 +1,6 @@
 {
   "name": "@ctrl/utorrent",
-  "version": "0.0.0-placeholder",
+  "version": "6.3.0",
   "description": "TypeScript api wrapper for utorrent using ofetch",
   "author": "Scott Cooper <scttcper@gmail.com>",
   "license": "MIT",
