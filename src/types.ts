@@ -61,7 +61,7 @@ export interface TorrentListResponse extends BaseResponse {
   /**
    * array of types containing label name and count
    */
-  label: [string, number][];
+  label: Array<[string, number]>;
   /**
    * CACHE ID
    */

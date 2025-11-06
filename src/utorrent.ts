@@ -1,7 +1,8 @@
+import { Readable } from 'node:stream';
+
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
-import { Readable } from 'stream';
 import { Cookie } from 'tough-cookie';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
@@ -284,7 +285,7 @@ export class Utorrent implements TorrentClient {
     params.set('action', 'add-file');
     params.set('token', this.state.auth!.token);
 
-    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
+    const url = `${joinURL(this.config.baseUrl, this.config.path ?? '')}?${params.toString()}`;
 
     const encoder = new FormDataEncoder(form);
     const res = await ofetch.raw<BaseResponse>(url, {
@@ -318,7 +319,7 @@ export class Utorrent implements TorrentClient {
    * set a setting
    * @param settings settings to set [setting_name, value] as array of key value tuples
    */
-  async setSetting(settings: [string, string | number][]): Promise<BaseResponse> {
+  async setSetting(settings: Array<[string, string | number]>): Promise<BaseResponse> {
     const params = new URLSearchParams();
     for (const setting of settings) {
       params.append('s', setting[0]);
@@ -422,7 +423,7 @@ export class Utorrent implements TorrentClient {
       params.set('action', action);
     }
 
-    const url = joinURL(this.config.baseUrl, this.config.path ?? '') + '?' + params.toString();
+    const url = `${joinURL(this.config.baseUrl, this.config.path ?? '')}?${params.toString()}`;
     const res = await ofetch.raw<T>(url, {
       method: 'GET',
       headers: {
@@ -442,7 +443,7 @@ export class Utorrent implements TorrentClient {
   private _authorization(): string {
     const str = `${this.config.username ?? ''}:${this.config.password ?? ''}`;
     const encoded = stringToBase64(str);
-    return 'Basic ' + encoded;
+    return `Basic ${encoded}`;
   }
 
   private async _ensureSession(): Promise<void> {
