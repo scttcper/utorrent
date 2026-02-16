@@ -1,7 +1,4 @@
-# utorrent
-
-[![npm](https://badgen.net/npm/v/@ctrl/utorrent)](https://www.npmjs.com/package/@ctrl/utorrent)
-[![coverage](https://badgen.net/codecov/c/github/scttcper/utorrent)](https://codecov.io/gh/scttcper/utorrent)
+# utorrent [![npm](https://badgen.net/npm/v/@ctrl/utorrent)](https://www.npmjs.com/package/@ctrl/utorrent)
 
 > TypeScript api wrapper for [utorrent](https://www.utorrent.com) using [ofetch](https://github.com/unjs/ofetch)
 
@@ -65,7 +62,7 @@ console.log(data.torrents.length);
 
 ### API
 
-DOCS: https://utorrent.vercel.app
+DOCS: https://utorrent.ep.workers.dev
 utorrent webui: https://github.com/bittorrent/webui/blob/master/webui.js  
 another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
 

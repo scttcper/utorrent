@@ -1,5 +1,15 @@
 import { Readable } from 'node:stream';
 
+import { magnetDecode } from '@ctrl/magnet-link';
+import type {
+  AddTorrentOptions as NormalizedAddTorrentOptions,
+  AllClientData,
+  NormalizedTorrent,
+  TorrentClient,
+  TorrentSettings,
+  TorrentClientState,
+} from '@ctrl/shared-torrent';
+import { hash } from '@ctrl/torrent-file';
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
@@ -12,17 +22,6 @@ import {
   stringToBase64,
   stringToUint8Array,
 } from 'uint8array-extras';
-
-import { magnetDecode } from '@ctrl/magnet-link';
-import type {
-  AddTorrentOptions as NormalizedAddTorrentOptions,
-  AllClientData,
-  NormalizedTorrent,
-  TorrentClient,
-  TorrentSettings,
-  TorrentClientState,
-} from '@ctrl/shared-torrent';
-import { hash } from '@ctrl/torrent-file';
 
 import { normalizeTorrentData } from './normalizeTorrentData.js';
 import type {
