@@ -10,10 +10,10 @@ import type {
   TorrentClientState,
 } from '@ctrl/shared-torrent';
 import { hash as getTorrentHash } from '@ctrl/torrent-file';
+import { parseSetCookie, splitSetCookieString, stringifyCookie } from 'cookie-es';
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
-import { Cookie } from 'tough-cookie';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
 import {
@@ -396,12 +396,11 @@ export class Utorrent implements TorrentClient {
     if (match) {
       const token = match[1]!;
       // persist auth state
-      const parsed = Cookie.parse(setCookie);
-      const expires = parsed && parsed.expires instanceof Date ? parsed.expires : undefined;
+      const authCookie = this._authCookie(setCookie);
       this.state.auth = {
         token,
         setCookie,
-        expires: expires ? new Date(expires).toISOString() : undefined,
+        expires: authCookie?.expires ? new Date(authCookie.expires).toISOString() : undefined,
       };
       return;
     }
@@ -457,12 +456,32 @@ export class Utorrent implements TorrentClient {
   }
 
   private _cookieHeader(): string {
-    const setCookie = this.state.auth?.setCookie ?? '';
+    return this._authCookie()?.header ?? '';
+  }
+
+  private _authCookie(
+    setCookie = this.state.auth?.setCookie ?? '',
+  ): { expires?: Date; header: string } | undefined {
     if (!setCookie) {
-      return '';
+      return;
     }
 
-    const parsed = Cookie.parse(setCookie);
-    return parsed?.cookieString() ?? '';
+    const authSetCookie = splitSetCookieString(setCookie)[0];
+    if (!authSetCookie) {
+      return;
+    }
+
+    const parsed = parseSetCookie(authSetCookie);
+    if (!parsed?.name || parsed.value === undefined) {
+      return;
+    }
+
+    const expiresValue = /(?:^|;)\s*expires=([^;]+)/i.exec(authSetCookie)?.[1];
+    const expires = expiresValue ? new Date(expiresValue) : undefined;
+
+    return {
+      expires: expires && !Number.isNaN(expires.getTime()) ? expires : undefined,
+      header: stringifyCookie({ [parsed.name]: parsed.value }),
+    };
   }
 }
