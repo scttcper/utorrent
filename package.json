@@ -34,24 +34,23 @@
     "@ctrl/magnet-link": "^4.3.0",
     "@ctrl/shared-torrent": "^6.5.1",
     "@ctrl/torrent-file": "^4.5.0",
+    "cookie-es": "^3.0.1",
     "form-data-encoder": "^4.1.0",
     "node-fetch-native": "^1.6.7",
     "ofetch": "^1.5.1",
-    "tough-cookie": "^6.0.0",
-    "type-fest": "^5.4.4",
+    "type-fest": "^5.5.0",
     "ufo": "^1.6.3",
     "uint8array-extras": "^1.5.0"
   },
   "devDependencies": {
-    "@ctrl/oxlint-config": "1.4.0",
+    "@ctrl/oxlint-config": "1.4.2",
     "@sindresorhus/tsconfig": "8.1.0",
-    "@types/node": "25.2.3",
-    "@types/tough-cookie": "4.0.5",
-    "oxfmt": "0.33.0",
-    "oxlint": "1.48.0",
-    "typedoc": "0.28.17",
-    "typescript": "5.9.3",
-    "vitest": "4.0.18"
+    "@types/node": "25.5.0",
+    "oxfmt": "0.41.0",
+    "oxlint": "1.56.0",
+    "typedoc": "0.28.18",
+    "typescript": "6.0.2",
+    "vitest": "4.1.1"
   },
   "release": {
     "branches": [
@@ -61,5 +60,5 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@10.29.3"
+  "packageManager": "pnpm@10.32.1"
 }
