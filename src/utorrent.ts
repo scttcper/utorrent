@@ -9,7 +9,7 @@ import type {
   TorrentSettings,
   TorrentClientState,
 } from '@ctrl/shared-torrent';
-import { hash } from '@ctrl/torrent-file';
+import { hash as getTorrentHash } from '@ctrl/torrent-file';
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
@@ -214,7 +214,7 @@ export class Utorrent implements TorrentClient {
         torrent = stringToUint8Array(torrent);
       }
 
-      torrentHash = hash(torrent);
+      torrentHash = getTorrentHash(torrent);
       await this.addTorrent(torrent);
     }
 
