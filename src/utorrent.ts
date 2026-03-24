@@ -10,9 +10,9 @@ import type {
   TorrentClientState,
 } from '@ctrl/shared-torrent';
 import { hash as getTorrentHash } from '@ctrl/torrent-file';
+import { parseSetCookie, splitSetCookieString, stringifyCookie } from 'cookie-es';
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
-import { parseSetCookie, splitSetCookieString, stringifyCookie } from 'cookie-es';
 import { ofetch } from 'ofetch';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
@@ -459,7 +459,9 @@ export class Utorrent implements TorrentClient {
     return this._authCookie()?.header ?? '';
   }
 
-  private _authCookie(setCookie = this.state.auth?.setCookie ?? ''): { expires?: Date; header: string } | undefined {
+  private _authCookie(
+    setCookie = this.state.auth?.setCookie ?? '',
+  ): { expires?: Date; header: string } | undefined {
     if (!setCookie) {
       return;
     }
