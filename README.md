@@ -68,7 +68,7 @@ another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
 
 ### Normalized API
 
-These functions have been normalized between torrent clients. Can easily support multiple torrent clients. See below for alternative supported torrent clients
+These functions are normalized through [@ctrl/shared-torrent](https://github.com/scttcper/shared-torrent), which makes it easier to support multiple torrent clients. See below for alternative supported torrent clients.
 
 ##### getAllData
 
@@ -115,9 +115,11 @@ console.log(res);
 
 ### See Also
 
-deluge - https://github.com/scttcper/deluge  
-transmission - https://github.com/scttcper/transmission  
-qbittorrent - https://github.com/scttcper/qbittorrent
+- shared types - [@ctrl/shared-torrent](https://github.com/scttcper/shared-torrent)  
+- deluge - [@ctrl/deluge](https://github.com/scttcper/deluge)  
+- transmission - [@ctrl/transmission](https://github.com/scttcper/transmission)  
+- qbittorrent - [@ctrl/qbittorrent](https://github.com/scttcper/qbittorrent)  
+- rtorrent - [@ctrl/rtorrent](https://github.com/scttcper/rtorrent)
 
 ### Start a test docker container
 
