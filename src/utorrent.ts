@@ -113,58 +113,41 @@ export class Utorrent implements TorrentClient {
   }
 
   async unpause(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('unpause', params);
-    return res._data!;
+    return this.torrentAction('unpause', hash);
   }
 
   async forceStartTorrent(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('forcestart', params);
-    return res._data!;
+    return this.torrentAction('forcestart', hash);
   }
 
   async pauseTorrent(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('pause', params);
-    return res._data!;
+    return this.torrentAction('pause', hash);
   }
 
   async stopTorrent(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('stop', params);
-    return res._data!;
+    return this.torrentAction('stop', hash);
   }
 
   async queueUp(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('queueup', params);
-    return res._data!;
+    return this.torrentAction('queueup', hash);
   }
 
   async queueDown(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('queuedown', params);
-    return res._data!;
+    return this.torrentAction('queuedown', hash);
   }
 
   async queueTop(hash: string): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-    const res = await this.request<BaseResponse>('queuetop', params);
-    return res._data!;
+    return this.torrentAction('queuetop', hash);
   }
 
   async queueBottom(hash: string): Promise<BaseResponse> {
+    return this.torrentAction('queuebottom', hash);
+  }
+
+  private async torrentAction(action: string, hash: string): Promise<BaseResponse> {
     const params = new URLSearchParams();
     params.set('hash', hash);
-    const res = await this.request<BaseResponse>('queuebottom', params);
+    const res = await this.request<BaseResponse>(action, params);
     return res._data!;
   }
 
