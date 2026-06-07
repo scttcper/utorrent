@@ -11,9 +11,10 @@ const STATE_QUEUED = 64;
 
 export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
   const torrentState: number = torrent[1];
-  const progress: number = torrent[4] / 100;
+  const progress: number = torrent[4] / 10;
   const done = progress >= 100;
   const isCompleted = progress >= 100;
+  const dateCompleted = torrent[24] ? new Date(torrent[24] * 1000).toISOString() : undefined;
 
   // TODO: Convert from bitwise
 
@@ -58,7 +59,7 @@ export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
     progress,
     ratio: torrent[7] / 1000,
     dateAdded: new Date(torrent[23] * 1000).toISOString(),
-    dateCompleted: new Date(torrent[24] * 1000).toISOString(),
+    dateCompleted,
     label: torrent[11],
     savePath: torrent[26],
     uploadSpeed: torrent[8],
@@ -69,7 +70,7 @@ export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
     connectedSeeds: torrent[14],
     totalPeers: torrent[13],
     totalSeeds: torrent[15],
-    totalSelected: torrent[18],
+    totalSelected: torrent[3],
     totalSize: torrent[3],
     totalUploaded: torrent[6],
     totalDownloaded: torrent[5],

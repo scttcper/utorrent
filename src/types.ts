@@ -76,7 +76,7 @@ export interface TorrentListResponse extends BaseResponse {
  * STATUS* (integer)
  * NAME (string)
  * SIZE (integer in bytes)
- * PERCENT PROGRESS (integer in per mils)
+ * PERCENT PROGRESS (integer in tenths of a percent, 1000 = 100%)
  * DOWNLOADED (integer in bytes)
  * UPLOADED (integer in bytes)
  * RATIO (integer in per mils)
@@ -90,7 +90,15 @@ export interface TorrentListResponse extends BaseResponse {
  * SEEDS IN SWARM (integer)
  * AVAILABILITY (integer in 1/65536ths)
  * TORRENT QUEUE ORDER (integer)
- * REMAINING (integer in bytes)
+ * REMAINING (integer in bytes left to download)
+ * DOWNLOAD URL (string)
+ * RSS FEED URL (string)
+ * STATUS MESSAGE (string)
+ * STREAM ID (string)
+ * DATE ADDED (Unix timestamp in seconds)
+ * DATE COMPLETED (Unix timestamp in seconds, 0 when incomplete)
+ * APP UPDATE URL (string)
+ * SAVE PATH (string)
  */
 export type TorrentData = [
   HASH: string,
