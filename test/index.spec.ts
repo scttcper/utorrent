@@ -134,6 +134,16 @@ it('should add torrent with normalized response', async () => {
   expect(torrent.totalUploaded).toBe(0);
   expect(torrent.uploadSpeed).toBe(0);
 });
+it('should add torrent with normalized response from string', async () => {
+  const client = new Utorrent({ baseUrl });
+
+  const torrent = await client.normalizedAddTorrent(torrentFileBuffer.toString('base64'), {
+    label: 'test',
+  });
+
+  expect(torrent.label).toBe('test');
+  expect(torrent.name).toBe(torrentName);
+});
 it('should add torrent with normalized response from magnet', async () => {
   const client = new Utorrent({ baseUrl });
 

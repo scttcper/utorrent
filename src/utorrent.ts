@@ -16,12 +16,7 @@ import { FormData } from 'node-fetch-native';
 import { ofetch } from 'ofetch';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
-import {
-  base64ToUint8Array,
-  isUint8Array,
-  stringToBase64,
-  stringToUint8Array,
-} from 'uint8array-extras';
+import { base64ToUint8Array, isUint8Array, stringToBase64 } from 'uint8array-extras';
 
 import { normalizeTorrentData } from './normalizeTorrentData.js';
 import type {
@@ -193,12 +188,9 @@ export class Utorrent implements TorrentClient {
 
       await this.addTorrentFromUrl(torrent);
     } else {
-      if (!isUint8Array(torrent)) {
-        torrent = stringToUint8Array(torrent);
-      }
-
-      torrentHash = getTorrentHash(torrent);
-      await this.addTorrent(torrent);
+      const torrentFile = this.torrentFileData(torrent);
+      torrentHash = getTorrentHash(torrentFile);
+      await this.addTorrent(torrentFile);
     }
 
     if (options.startPaused) {
@@ -254,12 +246,8 @@ export class Utorrent implements TorrentClient {
 
     const form = new FormData();
     const type = { type: 'application/x-bittorrent' };
-    if (typeof torrent === 'string') {
-      form.set('torrent_file', new File([base64ToUint8Array(torrent)], 'file.torrent', type));
-    } else {
-      const file = new File([torrent], 'file.torrent', type);
-      form.set('torrent_file', file);
-    }
+    const file = new File([this.torrentFileData(torrent)], 'file.torrent', type);
+    form.set('torrent_file', file);
 
     const params = new URLSearchParams();
     params.set('download_dir', '0');
@@ -285,6 +273,18 @@ export class Utorrent implements TorrentClient {
     });
 
     return res._data!;
+  }
+
+  private torrentFileData(torrent: string | Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
+    if (typeof torrent === 'string') {
+      return base64ToUint8Array(torrent);
+    }
+
+    if (!isUint8Array(torrent)) {
+      throw new TypeError('Torrent must be a base64 string or Uint8Array');
+    }
+
+    return torrent;
   }
 
   /**
