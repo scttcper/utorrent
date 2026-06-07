@@ -11,7 +11,7 @@ const STATE_QUEUED = 64;
 
 export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
   const torrentState: number = torrent[1];
-  const progress: number = torrent[4] / 100;
+  const progress: number = torrent[4] / 10;
   const done = progress >= 100;
   const isCompleted = progress >= 100;
 

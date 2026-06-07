@@ -76,7 +76,7 @@ export interface TorrentListResponse extends BaseResponse {
  * STATUS* (integer)
  * NAME (string)
  * SIZE (integer in bytes)
- * PERCENT PROGRESS (integer in per mils)
+ * PERCENT PROGRESS (integer in tenths of a percent, 1000 = 100%)
  * DOWNLOADED (integer in bytes)
  * UPLOADED (integer in bytes)
  * RATIO (integer in per mils)
