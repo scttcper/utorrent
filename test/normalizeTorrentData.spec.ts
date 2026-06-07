@@ -43,15 +43,21 @@ it('normalizes uTorrent progress from tenths of a percent', () => {
   expect(torrent.progress).toBe(50);
   expect(torrent.isCompleted).toBe(false);
   expect(torrent.state).toBe(TorrentState.downloading);
+  expect(torrent.totalSize).toBe(1000);
+  expect(torrent.totalSelected).toBe(1000);
+  expect(torrent.dateCompleted).toBeUndefined();
 });
 
 it('classifies a completed started torrent as seeding', () => {
   const torrentData: TorrentData = [...baseTorrent];
   torrentData[4] = 1000;
+  torrentData[18] = 0;
+  torrentData[24] = 1_700_000_100;
 
   const torrent = normalizeTorrentData(torrentData);
 
   expect(torrent.progress).toBe(100);
   expect(torrent.isCompleted).toBe(true);
   expect(torrent.state).toBe(TorrentState.seeding);
+  expect(torrent.dateCompleted).toBe('2023-11-14T22:15:00.000Z');
 });
