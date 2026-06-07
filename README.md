@@ -115,10 +115,10 @@ console.log(res);
 
 ### See Also
 
-- shared types - [@ctrl/shared-torrent](https://github.com/scttcper/shared-torrent)  
-- deluge - [@ctrl/deluge](https://github.com/scttcper/deluge)  
-- transmission - [@ctrl/transmission](https://github.com/scttcper/transmission)  
-- qbittorrent - [@ctrl/qbittorrent](https://github.com/scttcper/qbittorrent)  
+- shared types - [@ctrl/shared-torrent](https://github.com/scttcper/shared-torrent)
+- deluge - [@ctrl/deluge](https://github.com/scttcper/deluge)
+- transmission - [@ctrl/transmission](https://github.com/scttcper/transmission)
+- qbittorrent - [@ctrl/qbittorrent](https://github.com/scttcper/qbittorrent)
 - rtorrent - [@ctrl/rtorrent](https://github.com/scttcper/rtorrent)
 
 ### Start a test docker container
