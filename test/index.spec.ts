@@ -96,7 +96,7 @@ it('should return normalized torrent data', async () => {
   expect(torrent.ratio).toBe(0);
   // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
   // expect(torrent.state).toBe(TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.dateCompleted).toBeUndefined();
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
@@ -125,7 +125,7 @@ it('should add torrent with normalized response', async () => {
   expect(torrent.ratio).toBe(0);
   // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
   // expect(torrent.state).toBe(TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
   expect(torrent.totalSeeds).toBe(0);
@@ -162,7 +162,7 @@ it('should add torrent with normalized response from magnet', async () => {
   expect(torrent.ratio).toBe(0);
   // t.is(torrent.savePath, '/utorrent/data/incomplete');
   // t.is(torrent.state, TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
   expect(torrent.totalSeeds).toBe(0);

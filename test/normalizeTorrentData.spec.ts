@@ -40,7 +40,7 @@ const baseTorrent: TorrentData = [
 it('normalizes uTorrent progress from tenths of a percent', () => {
   const torrent = normalizeTorrentData(baseTorrent);
 
-  expect(torrent.progress).toBe(50);
+  expect(torrent.progress).toBe(0.5);
   expect(torrent.isCompleted).toBe(false);
   expect(torrent.state).toBe(TorrentState.downloading);
   expect(torrent.totalSize).toBe(1000);
@@ -56,8 +56,19 @@ it('classifies a completed started torrent as seeding', () => {
 
   const torrent = normalizeTorrentData(torrentData);
 
-  expect(torrent.progress).toBe(100);
+  expect(torrent.progress).toBe(1);
   expect(torrent.isCompleted).toBe(true);
   expect(torrent.state).toBe(TorrentState.seeding);
   expect(torrent.dateCompleted).toBe('2023-11-14T22:15:00.000Z');
+});
+
+it('passes through the status message', () => {
+  const torrentData: TorrentData = [...baseTorrent];
+  torrentData[1] = 152;
+  torrentData[21] = 'Error: Permission denied (WriteToDisk)';
+
+  const torrent = normalizeTorrentData(torrentData);
+
+  expect(torrent.state).toBe(TorrentState.error);
+  expect(torrent.stateMessage).toBe('Error: Permission denied (WriteToDisk)');
 });
