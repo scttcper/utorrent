@@ -8,6 +8,8 @@
 npm install @ctrl/utorrent
 ```
 
+Requires Node.js 22 or newer.
+
 ### Use
 
 ```ts
@@ -65,6 +67,10 @@ console.log(data.torrents.length);
 DOCS: https://utorrent.ep.workers.dev  
 utorrent webui: https://github.com/bittorrent/webui/blob/master/webui.js  
 another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
+
+Things that work differently from the other clients:
+
+- uTorrent can't add a torrent paused, `startPaused` pauses it right after adding
 
 ### Normalized API
 
