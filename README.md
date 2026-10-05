@@ -8,6 +8,8 @@
 npm install @ctrl/utorrent
 ```
 
+Requires Node.js 24 or newer.
+
 ### Use
 
 ```ts
@@ -66,6 +68,10 @@ DOCS: https://utorrent.ep.workers.dev
 utorrent webui: https://github.com/bittorrent/webui/blob/master/webui.js  
 another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
 
+Things that work differently from the other clients:
+
+- uTorrent can't add a torrent paused, `startPaused` pauses it right after adding
+
 ### Normalized API
 
 These functions are normalized through [@ctrl/shared-torrent](https://github.com/scttcper/shared-torrent), which makes it easier to support multiple torrent clients. See [below](#see-also) for alternative supported torrent clients.
@@ -90,27 +96,23 @@ console.log(data);
 
 ##### pauseTorrent and resumeTorrent
 
-Pause or resume a torrent
+Pause or resume one or more torrents
 
 ```ts
-const paused = await client.pauseTorrent('torrent-hash');
-console.log(paused);
-const resumed = await client.resumeTorrent('torrent-hash');
-console.log(resumed);
+await client.pauseTorrent('torrent-hash');
+await client.resumeTorrent(['torrent-hash', 'other-torrent-hash']);
 ```
 
 ##### removeTorrent
 
-Remove a torrent. Does not remove data on disk by default.
+Remove one or more torrents, throws if a torrent doesn't exist. Does not remove data on disk by default.
 
 ```ts
 // does not remove data on disk
-const result = await client.removeTorrent('torrent-hash', false);
-console.log(result);
+await client.removeTorrent('torrent-hash', false);
 
 // remove data on disk
-const res = await client.removeTorrent('torrent-hash', true);
-console.log(res);
+await client.removeTorrent(['torrent-hash', 'other-torrent-hash'], true);
 ```
 
 ##### queueUp and queueDown

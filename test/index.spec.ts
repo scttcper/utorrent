@@ -72,12 +72,26 @@ it('should move torrents in queue', async () => {
   await client.queueTop(key);
   await client.queueBottom(key);
 });
+it('should pause/resume torrent', async () => {
+  const client = new Utorrent({ baseUrl });
+  const key = await setupTorrent(client);
+  await client.pauseTorrent([key]);
+  expect((await client.getTorrent(key)).state).toBe('paused');
+  await client.resumeTorrent(key);
+});
 it('should remove torrent', async () => {
   const client = new Utorrent({ baseUrl });
   const key = await setupTorrent(client);
-  await client.removeTorrent(key);
+  await client.removeTorrent([key]);
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(0);
+});
+it('should throw when removing a torrent that does not exist', async () => {
+  const client = new Utorrent({ baseUrl });
+  const key = await setupTorrent(client);
+  await expect(client.removeTorrent('0'.repeat(40))).rejects.toThrow('Torrent not found');
+  await expect(client.removeTorrent([key, '0'.repeat(40)])).rejects.toThrow('Torrent not found');
+  expect((await client.listTorrents()).torrents).toHaveLength(1);
 });
 it('should return normalized torrent data', async () => {
   const client = new Utorrent({ baseUrl });
@@ -89,14 +103,14 @@ it('should return normalized torrent data', async () => {
   expect(torrent.downloadSpeed).toBe(0);
   // expect(torrent.eta).toBe(0);
   expect(torrent.isCompleted).toBe(false);
-  expect(torrent.label).toBe('');
+  expect(torrent.label).toBeUndefined();
   expect(torrent.name).toBe(torrentName);
   expect(torrent.progress).toBeGreaterThanOrEqual(0);
   expect(torrent.queuePosition).toBe(1);
   expect(torrent.ratio).toBe(0);
   // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
   // expect(torrent.state).toBe(TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.dateCompleted).toBeUndefined();
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
@@ -125,7 +139,7 @@ it('should add torrent with normalized response', async () => {
   expect(torrent.ratio).toBe(0);
   // expect(torrent.savePath).toBe('/utorrent/data/incomplete');
   // expect(torrent.state).toBe(TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
   expect(torrent.totalSeeds).toBe(0);
@@ -162,7 +176,7 @@ it('should add torrent with normalized response from magnet', async () => {
   expect(torrent.ratio).toBe(0);
   // t.is(torrent.savePath, '/utorrent/data/incomplete');
   // t.is(torrent.state, TorrentState.queued);
-  expect(torrent.stateMessage).toBe('');
+  expect(torrent.stateMessage).toBeTypeOf('string');
   expect(torrent.totalDownloaded).toBe(0);
   expect(torrent.totalPeers).toBe(0);
   expect(torrent.totalSeeds).toBe(0);

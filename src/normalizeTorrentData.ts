@@ -11,12 +11,11 @@ const STATE_QUEUED = 64;
 
 export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
   const torrentState: number = torrent[1];
-  const progress: number = torrent[4] / 10;
-  const done = progress >= 100;
-  const isCompleted = progress >= 100;
+  // uTorrent reports progress in tenths of a percent (0-1000), normalized progress is 0-1
+  const progress: number = torrent[4] / 1000;
+  const done = torrent[4] >= 1000;
+  const isCompleted = done;
   const dateCompleted = torrent[24] ? new Date(torrent[24] * 1000).toISOString() : undefined;
-
-  // TODO: Convert from bitwise
 
   let state = TorrentState.unknown;
   if (torrentState & STATE_PAUSED) {
@@ -55,17 +54,18 @@ export function normalizeTorrentData(torrent: TorrentData): NormalizedTorrent {
     name: torrent[2],
     state,
     isCompleted,
-    stateMessage: '',
+    stateMessage: torrent[21],
     progress,
     ratio: torrent[7] / 1000,
     dateAdded: new Date(torrent[23] * 1000).toISOString(),
     dateCompleted,
-    label: torrent[11],
+    label: torrent[11] || undefined,
     savePath: torrent[26],
     uploadSpeed: torrent[8],
     downloadSpeed: torrent[9],
-    eta: torrent[10],
-    queuePosition: torrent[17],
+    // uTorrent uses -1 for an unknown eta and a queue position of -1 when not queued
+    eta: isCompleted ? 0 : torrent[10] > 0 ? torrent[10] : -1,
+    queuePosition: Math.max(torrent[17], 0),
     connectedPeers: torrent[12],
     connectedSeeds: torrent[14],
     totalPeers: torrent[13],
