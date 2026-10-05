@@ -89,7 +89,7 @@ it('should return normalized torrent data', async () => {
   expect(torrent.downloadSpeed).toBe(0);
   // expect(torrent.eta).toBe(0);
   expect(torrent.isCompleted).toBe(false);
-  expect(torrent.label).toBe('');
+  expect(torrent.label).toBeUndefined();
   expect(torrent.name).toBe(torrentName);
   expect(torrent.progress).toBeGreaterThanOrEqual(0);
   expect(torrent.queuePosition).toBe(1);
