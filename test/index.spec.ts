@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { afterEach, expect, it } from 'vitest';
 
-import { Utorrent } from '../src/index.js';
+import { TorrentClientError, Utorrent } from '../src/index.js';
 
 const baseUrl = 'http://localhost:8080/';
 const torrentName = 'ubuntu-18.04.1-desktop-amd64.iso';
@@ -86,12 +86,25 @@ it('should remove torrent', async () => {
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(0);
 });
-it('should throw when removing a torrent that does not exist', async () => {
+it('should throw torrent_not_found for a torrent that does not exist', async () => {
   const client = new Utorrent({ baseUrl });
   const key = await setupTorrent(client);
-  await expect(client.removeTorrent('0'.repeat(40))).rejects.toThrow('Torrent not found');
-  await expect(client.removeTorrent([key, '0'.repeat(40)])).rejects.toThrow('Torrent not found');
+  const missing = '0'.repeat(40);
+  const notFound = { name: 'TorrentClientError', code: 'torrent_not_found' };
+  await expect(client.getTorrent(missing)).rejects.toMatchObject(notFound);
+  await expect(client.pauseTorrent(missing)).rejects.toMatchObject(notFound);
+  await expect(client.resumeTorrent(missing)).rejects.toMatchObject(notFound);
+  await expect(client.queueUp(missing)).rejects.toMatchObject(notFound);
+  await expect(client.queueDown(missing)).rejects.toMatchObject(notFound);
+  await expect(client.removeTorrent(missing)).rejects.toMatchObject(notFound);
+  await expect(client.removeTorrent([key, missing])).rejects.toMatchObject(notFound);
   expect((await client.listTorrents()).torrents).toHaveLength(1);
+});
+it('should throw request_failed without a status when utorrent is unreachable', async () => {
+  const client = new Utorrent({ baseUrl: 'http://127.0.0.1:1/' });
+  const error = await client.getAllData().catch((error_: unknown) => error_);
+  expect(error).toBeInstanceOf(TorrentClientError);
+  expect(error).toMatchObject({ code: 'request_failed', status: undefined });
 });
 it('should return normalized torrent data', async () => {
   const client = new Utorrent({ baseUrl });
