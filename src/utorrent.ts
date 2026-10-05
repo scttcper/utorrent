@@ -1,19 +1,20 @@
 import { Readable } from 'node:stream';
 
 import { magnetDecode } from '@ctrl/magnet-link';
-import type {
-  AddTorrentOptions as NormalizedAddTorrentOptions,
-  AllClientData,
-  NormalizedTorrent,
-  TorrentClient,
-  TorrentSettings,
-  TorrentClientState,
+import {
+  type AddTorrentOptions as NormalizedAddTorrentOptions,
+  type AllClientData,
+  type NormalizedTorrent,
+  type TorrentClient,
+  TorrentClientError,
+  type TorrentSettings,
+  type TorrentClientState,
 } from '@ctrl/shared-torrent';
 import { hash as getTorrentHash } from '@ctrl/torrent-file';
 import { parseSetCookie, splitSetCookieString, stringifyCookie } from 'cookie-es';
 import { FormDataEncoder } from 'form-data-encoder';
 import { FormData } from 'node-fetch-native';
-import { ofetch } from 'ofetch';
+import { FetchError, ofetch } from 'ofetch';
 import type { Jsonify } from 'type-fest';
 import { joinURL } from 'ufo';
 import { base64ToUint8Array, isUint8Array, stringToBase64 } from 'uint8array-extras';
@@ -151,17 +152,9 @@ export class Utorrent implements TorrentClient {
 
   /**
    * @param removeData (default: false) If true, remove the data from disk
-   * @throws when a torrent doesn't exist, uTorrent silently ignores unknown hashes
    */
   async removeTorrent(hash: string | string[], removeData = false): Promise<void> {
-    const hashes = Array.isArray(hash) ? hash : [hash];
-    const { torrents } = await this.listTorrents();
-    const existing = new Set(torrents.map(torrent => torrent[0].toLowerCase()));
-    if (hashes.some(h => !existing.has(h.toLowerCase()))) {
-      throw new Error('Torrent not found');
-    }
-
-    await this.torrentAction(removeData ? 'removedatatorrent' : 'removetorrent', hashes);
+    await this.torrentAction(removeData ? 'removedatatorrent' : 'removetorrent', hash);
   }
 
   async setProps(hash: string, props: Record<string, string | number>): Promise<BaseResponse> {
@@ -212,7 +205,7 @@ export class Utorrent implements TorrentClient {
     const listResponse = await this.listTorrents();
     const torrentData = listResponse.torrents.find(n => n[0].toLowerCase() === id.toLowerCase());
     if (!torrentData) {
-      throw new Error('Torrent not found');
+      throw new TorrentClientError('Torrent not found', 'torrent_not_found');
     }
 
     return normalizeTorrentData(torrentData);
@@ -364,14 +357,16 @@ export class Utorrent implements TorrentClient {
     };
     const params = new URLSearchParams();
     params.set('t', Date.now().toString());
-    const res = await ofetch.raw(url, {
-      headers,
-      params,
-      retry: 0,
-      responseType: 'text',
-      dispatcher: this.config.dispatcher,
-      timeout: this.config.timeout,
-    });
+    const res = await ofetch
+      .raw(url, {
+        headers,
+        params,
+        retry: 0,
+        responseType: 'text',
+        dispatcher: this.config.dispatcher,
+        timeout: this.config.timeout,
+      })
+      .catch(toClientError);
     const setCookie = res.headers.get('set-cookie') || '';
     // example token response
     // <html><div id='token' style='display:none;'>gBPEW_SyrgB-RSmF3tZvqSsK9Ht7jk4uAAAAAC61XoYAAAAATyqNE_uq8lwAAAAA</div></html>
@@ -389,7 +384,7 @@ export class Utorrent implements TorrentClient {
       return;
     }
 
-    throw new Error('Valid token not found');
+    throw new TorrentClientError('Valid token not found', 'unauthorized');
   }
 
   async request<T extends object>(
@@ -406,18 +401,20 @@ export class Utorrent implements TorrentClient {
     }
 
     const url = `${joinURL(this.config.baseUrl, this.config.path ?? '')}?${params.toString()}`;
-    const res = await ofetch.raw<T>(url, {
-      method: 'GET',
-      headers: {
-        Authorization: this._authorization(),
-        Cookie: this._cookieHeader(),
-      },
-      retry: 0,
-      timeout: this.config.timeout,
-      responseType: 'json',
-      parseResponse: JSON.parse,
-      dispatcher: this.config.dispatcher,
-    });
+    const res = await ofetch
+      .raw<T>(url, {
+        method: 'GET',
+        headers: {
+          Authorization: this._authorization(),
+          Cookie: this._cookieHeader(),
+        },
+        retry: 0,
+        timeout: this.config.timeout,
+        responseType: 'json',
+        parseResponse: JSON.parse,
+        dispatcher: this.config.dispatcher,
+      })
+      .catch(toClientError);
 
     return res;
   }
@@ -468,4 +465,16 @@ export class Utorrent implements TorrentClient {
       header: stringifyCookie({ [parsed.name]: parsed.value }),
     };
   }
+}
+
+function toClientError(error: unknown): never {
+  if (error instanceof FetchError) {
+    throw new TorrentClientError(
+      error.message,
+      error.status === 401 || error.status === 403 ? 'unauthorized' : 'request_failed',
+      { status: error.status, cause: error },
+    );
+  }
+
+  throw new TorrentClientError((error as Error).message, 'request_failed', { cause: error });
 }
