@@ -72,12 +72,26 @@ it('should move torrents in queue', async () => {
   await client.queueTop(key);
   await client.queueBottom(key);
 });
+it('should pause/resume torrent', async () => {
+  const client = new Utorrent({ baseUrl });
+  const key = await setupTorrent(client);
+  await client.pauseTorrent([key]);
+  expect((await client.getTorrent(key)).state).toBe('paused');
+  await client.resumeTorrent(key);
+});
 it('should remove torrent', async () => {
   const client = new Utorrent({ baseUrl });
   const key = await setupTorrent(client);
-  await client.removeTorrent(key);
+  await client.removeTorrent([key]);
   const res = await client.listTorrents();
   expect(res.torrents).toHaveLength(0);
+});
+it('should throw when removing a torrent that does not exist', async () => {
+  const client = new Utorrent({ baseUrl });
+  const key = await setupTorrent(client);
+  await expect(client.removeTorrent('0'.repeat(40))).rejects.toThrow('Torrent not found');
+  await expect(client.removeTorrent([key, '0'.repeat(40)])).rejects.toThrow('Torrent not found');
+  expect((await client.listTorrents()).torrents).toHaveLength(1);
 });
 it('should return normalized torrent data', async () => {
   const client = new Utorrent({ baseUrl });

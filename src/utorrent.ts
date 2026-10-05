@@ -103,8 +103,8 @@ export class Utorrent implements TorrentClient {
   /**
    * alias of unpause, resumes a torrent
    */
-  async resumeTorrent(hash: string): Promise<BaseResponse> {
-    return this.unpause(hash);
+  async resumeTorrent(hash: string | string[]): Promise<void> {
+    await this.torrentAction('unpause', hash);
   }
 
   async unpause(hash: string): Promise<BaseResponse> {
@@ -115,20 +115,20 @@ export class Utorrent implements TorrentClient {
     return this.torrentAction('forcestart', hash);
   }
 
-  async pauseTorrent(hash: string): Promise<BaseResponse> {
-    return this.torrentAction('pause', hash);
+  async pauseTorrent(hash: string | string[]): Promise<void> {
+    await this.torrentAction('pause', hash);
   }
 
   async stopTorrent(hash: string): Promise<BaseResponse> {
     return this.torrentAction('stop', hash);
   }
 
-  async queueUp(hash: string): Promise<BaseResponse> {
-    return this.torrentAction('queueup', hash);
+  async queueUp(hash: string | string[]): Promise<void> {
+    await this.torrentAction('queueup', hash);
   }
 
-  async queueDown(hash: string): Promise<BaseResponse> {
-    return this.torrentAction('queuedown', hash);
+  async queueDown(hash: string | string[]): Promise<void> {
+    await this.torrentAction('queuedown', hash);
   }
 
   async queueTop(hash: string): Promise<BaseResponse> {
@@ -139,28 +139,29 @@ export class Utorrent implements TorrentClient {
     return this.torrentAction('queuebottom', hash);
   }
 
-  private async torrentAction(action: string, hash: string): Promise<BaseResponse> {
+  private async torrentAction(action: string, hash: string | string[]): Promise<BaseResponse> {
     const params = new URLSearchParams();
-    params.set('hash', hash);
+    for (const h of Array.isArray(hash) ? hash : [hash]) {
+      params.append('hash', h);
+    }
+
     const res = await this.request<BaseResponse>(action, params);
     return res._data!;
   }
 
   /**
    * @param removeData (default: false) If true, remove the data from disk
+   * @throws when a torrent doesn't exist, uTorrent silently ignores unknown hashes
    */
-  async removeTorrent(hash: string, removeData = false): Promise<BaseResponse> {
-    const params = new URLSearchParams();
-    params.set('hash', hash);
-
-    // decide action from remove torrent data
-    let action = 'removetorrent';
-    if (removeData) {
-      action = 'removedatatorrent';
+  async removeTorrent(hash: string | string[], removeData = false): Promise<void> {
+    const hashes = Array.isArray(hash) ? hash : [hash];
+    const { torrents } = await this.listTorrents();
+    const existing = new Set(torrents.map(torrent => torrent[0].toLowerCase()));
+    if (hashes.some(h => !existing.has(h.toLowerCase()))) {
+      throw new Error('Torrent not found');
     }
 
-    const res = await this.request<BaseResponse>(action, params);
-    return res._data!;
+    await this.torrentAction(removeData ? 'removedatatorrent' : 'removetorrent', hashes);
   }
 
   async setProps(hash: string, props: Record<string, string | number>): Promise<BaseResponse> {
