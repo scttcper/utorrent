@@ -88,17 +88,12 @@ it('should remove torrent', async () => {
 });
 it('should throw torrent_not_found for a torrent that does not exist', async () => {
   const client = new Utorrent({ baseUrl });
-  const key = await setupTorrent(client);
-  const missing = '0'.repeat(40);
-  const notFound = { name: 'TorrentClientError', code: 'torrent_not_found' };
-  await expect(client.getTorrent(missing)).rejects.toMatchObject(notFound);
-  await expect(client.pauseTorrent(missing)).rejects.toMatchObject(notFound);
-  await expect(client.resumeTorrent(missing)).rejects.toMatchObject(notFound);
-  await expect(client.queueUp(missing)).rejects.toMatchObject(notFound);
-  await expect(client.queueDown(missing)).rejects.toMatchObject(notFound);
-  await expect(client.removeTorrent(missing)).rejects.toMatchObject(notFound);
-  await expect(client.removeTorrent([key, missing])).rejects.toMatchObject(notFound);
-  expect((await client.listTorrents()).torrents).toHaveLength(1);
+  await expect(client.getTorrent('0'.repeat(40))).rejects.toMatchObject({
+    name: 'TorrentClientError',
+    code: 'torrent_not_found',
+  });
+  // uTorrent ignores unknown hashes
+  await client.removeTorrent('0'.repeat(40));
 });
 it('should throw request_failed without a status when utorrent is unreachable', async () => {
   const client = new Utorrent({ baseUrl: 'http://127.0.0.1:1/' });

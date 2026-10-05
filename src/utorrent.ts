@@ -105,7 +105,6 @@ export class Utorrent implements TorrentClient {
    * alias of unpause, resumes a torrent
    */
   async resumeTorrent(hash: string | string[]): Promise<void> {
-    await this.assertTorrentsExist(hash);
     await this.torrentAction('unpause', hash);
   }
 
@@ -118,7 +117,6 @@ export class Utorrent implements TorrentClient {
   }
 
   async pauseTorrent(hash: string | string[]): Promise<void> {
-    await this.assertTorrentsExist(hash);
     await this.torrentAction('pause', hash);
   }
 
@@ -127,12 +125,10 @@ export class Utorrent implements TorrentClient {
   }
 
   async queueUp(hash: string | string[]): Promise<void> {
-    await this.assertTorrentsExist(hash);
     await this.torrentAction('queueup', hash);
   }
 
   async queueDown(hash: string | string[]): Promise<void> {
-    await this.assertTorrentsExist(hash);
     await this.torrentAction('queuedown', hash);
   }
 
@@ -142,18 +138,6 @@ export class Utorrent implements TorrentClient {
 
   async queueBottom(hash: string): Promise<BaseResponse> {
     return this.torrentAction('queuebottom', hash);
-  }
-
-  /**
-   * uTorrent silently ignores unknown hashes, the normalized methods throw instead
-   */
-  private async assertTorrentsExist(hash: string | string[]): Promise<void> {
-    const hashes = Array.isArray(hash) ? hash : [hash];
-    const { torrents } = await this.listTorrents();
-    const existing = new Set(torrents.map(torrent => torrent[0].toLowerCase()));
-    if (hashes.some(h => !existing.has(h.toLowerCase()))) {
-      throw new TorrentClientError('Torrent not found', 'torrent_not_found');
-    }
   }
 
   private async torrentAction(action: string, hash: string | string[]): Promise<BaseResponse> {
@@ -170,7 +154,6 @@ export class Utorrent implements TorrentClient {
    * @param removeData (default: false) If true, remove the data from disk
    */
   async removeTorrent(hash: string | string[], removeData = false): Promise<void> {
-    await this.assertTorrentsExist(hash);
     await this.torrentAction(removeData ? 'removedatatorrent' : 'removetorrent', hash);
   }
 

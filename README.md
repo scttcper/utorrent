@@ -71,6 +71,7 @@ another webui link: https://github.com/bittorrent/webui/wiki/Web-UI-API
 Things that work differently from the other clients:
 
 - uTorrent can't add a torrent paused, `startPaused` pauses it right after adding
+- uTorrent ignores unknown hashes, pause, resume, queue and remove don't throw for them
 
 ### Normalized API
 
@@ -105,7 +106,7 @@ await client.resumeTorrent(['torrent-hash', 'other-torrent-hash']);
 
 ##### removeTorrent
 
-Remove one or more torrents, throws if a torrent doesn't exist. Does not remove data on disk by default.
+Remove one or more torrents. Does not remove data on disk by default.
 
 ```ts
 // does not remove data on disk
@@ -155,10 +156,10 @@ Failed requests throw a `TorrentClientError` from [@ctrl/shared-torrent](https:/
 import { TorrentClientError } from '@ctrl/utorrent';
 
 try {
-  await client.removeTorrent('torrent-hash');
+  await client.getTorrent('torrent-hash');
 } catch (error) {
   if (error instanceof TorrentClientError && error.code === 'torrent_not_found') {
-    // already removed
+    // not in the client
   }
 }
 ```
