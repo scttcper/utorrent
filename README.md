@@ -8,7 +8,7 @@
 npm install @ctrl/utorrent
 ```
 
-Requires Node.js 22 or newer.
+Requires Node.js 24 or newer.
 
 ### Use
 
